@@ -1,0 +1,77 @@
+/* Refined Color Palette and Gradients */
+.pattern-grid-lg {
+  background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* Hero Section Gradient */
+.bg-gradient-to-r.from-red-700.to-blue-800 {
+  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+}
+
+/* Consistent Button Colors */
+.bg-emerald-700 {
+  background-color: #4F46E5;
+}
+.bg-emerald-700:hover {
+  background-color: #4338CA;
+}
+.text-emerald-600 {
+  color: #4F46E5;
+}
+.hover\:bg-emerald-50:hover {
+  background-color: #EEF2FF;
+}
+
+/* Card and Section Colors */
+.bg-gradient-to-br.from-blue-50.to-purple-50 {
+  background: linear-gradient(135deg, #EEF2FF, #F5F3FF);
+}
+
+/* Testimonials Section */
+.bg-gradient-to-r.from-blue-500.to-purple-600 {
+  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+}
+
+/* Enhanced Floating Animation */
+@keyframes floatUpward {
+  0% {
+    transform: translateY(100vh) rotate(0deg);
+    opacity: 0;
+  }
+  15% { opacity: 0.4; }
+  85% { opacity: 0.4; }
+  100% {
+    transform: translateY(-50px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Floating Objects with Consistent Speed Variation */
+.floating-object {
+  position: absolute;
+  animation: floatUpward 15s ease-in-out infinite;
+  opacity: 0;
+}
+.floating-object:nth-child(1) { left: 15%; animation-duration: 13s; }
+.floating-object:nth-child(2) { left: 35%; animation-duration: 15s; }
+.floating-object:nth-child(3) { left: 55%; animation-duration: 17s; }
+.floating-object:nth-child(4) { left: 75%; animation-duration: 19s; }
+.floating-object:nth-child(5) { left: 95%; animation-duration: 21s; }
+
+/* Update Floating Object Style */
+.floating-object div {
+  background-color: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(4px);
+}
+
+/* Scrollbar Styling */
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.overflow-x-auto::-webkit-scrollbar {
+  display: none;
+}
