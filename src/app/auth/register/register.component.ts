@@ -17,6 +17,7 @@ import { HeaderComponent } from "../../component/header/header.component"
           <img src="../../../assets/images/logo2.png" alt="coTrade Logo" class="mx-auto h-16 w-auto mb-4">
           <h2 class="text-3xl font-bold text-white">Inscription</h2>
         </div>
+
         <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-6">
           <div>
             <label for="username" class="block text-sm font-medium text-white mb-1">Nom d'utilisateur</label>
