@@ -1,10 +1,11 @@
 import { Component, type OnInit } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { RouterModule } from "@angular/router"
-
 import { FormsModule } from "@angular/forms"
 import {  Post, PostStatus } from "../../../../models/post/post.module"
 import  { PostService } from "../../../../service/post/post.service"
+import  { CategoryService } from "../../../../service/category/category.service"
+import  { Category } from "../../../../models/category/category.module"
 
 @Component({
   selector: "app-post-list",
@@ -39,8 +40,8 @@ import  { PostService } from "../../../../service/post/post.service"
             class="block w-full px-4 py-2 text-gray-900 dark:text-white bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 appearance-none"
           >
             <option value="" class="dark:bg-gray-800">Toutes les catégories</option>
-            <option *ngFor="let category of categories" [value]="category" class="dark:bg-gray-800">
-              {{category}}
+            <option *ngFor="let category of categories" [value]="category.name" class="dark:bg-gray-800">
+              {{category.name}}
             </option>
           </select>
           <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
@@ -267,14 +268,30 @@ export class PostListComponent implements OnInit {
   // Stocke l'index de la photo sélectionnée pour chaque post
   selectedPhotoIndices: Map<string, number> = new Map()
 
-  categories: string[] = ["Informatique", "Électronique", "Mobilier", "Vêtements", "Autres"]
+  categories: Category[] = []
   statusOptions = Object.values(PostStatus)
   locations: string[] = ["Casablanca", "Rabat", "Marrakech", "Tanger", "Fès"]
 
-  constructor(private postService: PostService) {}
+  constructor(
+    private postService: PostService,
+    private categoryService: CategoryService,
+  ) {}
 
   ngOnInit() {
+    this.loadCategories()
     this.loadPosts()
+  }
+
+  loadCategories() {
+    this.categoryService.getAllCategories().subscribe({
+      next: (categories) => {
+        this.categories = categories
+        console.log("Categories loaded:", categories)
+      },
+      error: (error) => {
+        console.error("Error loading categories:", error)
+      },
+    })
   }
 
   loadPosts() {
@@ -314,9 +331,7 @@ export class PostListComponent implements OnInit {
         return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
       case PostStatus.INACTIVE:
         return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
-      case PostStatus.PENDING:
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-      case PostStatus.COMPLETED:
+      case PostStatus.EXCHANGED:
         return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"

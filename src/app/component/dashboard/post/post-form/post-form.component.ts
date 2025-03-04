@@ -3,9 +3,11 @@ import { CommonModule } from "@angular/common"
 import { ReactiveFormsModule,  FormBuilder,  FormGroup, Validators,  FormArray } from "@angular/forms"
 import { RouterModule,  ActivatedRoute,  Router } from "@angular/router"
 import  { PostService } from "../../../../service/post/post.service"
-import { PostStatus } from "../../../../models/post/post.module"
+import { PostSelect, PostStatus } from "../../../../models/post/post.module"
 import  { HttpClient } from "@angular/common/http"
-import {AuthService} from "../../../../service/auth/auth.service";
+import  { AuthService } from "../../../../service/auth/auth.service"
+import  { CategoryService } from "../../../../service/category/category.service"
+import  { Category } from "../../../../models/category/category.module"
 
 @Component({
   selector: "app-post-form",
@@ -59,8 +61,8 @@ import {AuthService} from "../../../../service/auth/auth.service";
                 class="mt-1 block w-full px-4 py-2 text-gray-900 dark:text-white bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 appearance-none"
               >
                 <option value="" class="dark:bg-gray-900">Sélectionner une catégorie</option>
-                <option *ngFor="let category of categories" [value]="category" class="dark:bg-gray-900">
-                  {{category}}
+                <option *ngFor="let category of categories" [value]="category.name" class="dark:bg-gray-900">
+                  {{category.name}}
                 </option>
               </select>
               <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
@@ -215,12 +217,13 @@ export class PostFormComponent implements OnInit {
 
   postForm: FormGroup
   isEditing = false
-  categories = ["Informatique", "Électronique", "Mobilier", "Vêtements", "Autres"]
-  statusOptions = Object.values(PostStatus)
+  categories: Category[] = []
+  statusOptions = Object.values(PostSelect)
 
   constructor(
     private fb: FormBuilder,
     private postService: PostService,
+    private categoryService: CategoryService,
     private route: ActivatedRoute,
     private router: Router,
     private http: HttpClient,
@@ -238,11 +241,26 @@ export class PostFormComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Charger les catégories depuis la base de données
+    this.loadCategories()
+
     const id = this.route.snapshot.paramMap.get("id")
     if (id) {
       this.isEditing = true
       this.loadPost(id)
     }
+  }
+
+  loadCategories() {
+    this.categoryService.getAllCategories().subscribe({
+      next: (categories) => {
+        this.categories = categories
+        console.log("Categories loaded:", categories)
+      },
+      error: (error) => {
+        console.error("Error loading categories:", error)
+      },
+    })
   }
 
   get photos() {

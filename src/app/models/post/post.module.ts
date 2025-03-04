@@ -1,8 +1,11 @@
 export enum PostStatus {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
-  PENDING = "PENDING",
-  COMPLETED = "COMPLETED",
+  EXCHANGED = "EXCHANGED",
+}
+export enum PostSelect {
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
 }
 
 export interface Photo {

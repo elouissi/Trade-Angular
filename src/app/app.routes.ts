@@ -7,6 +7,8 @@ import {HomeComponent} from "./component/home/home.component";
 import {PostListComponent} from "./component/dashboard/post/post-list/post-list.component";
 import {PostFormComponent} from "./component/dashboard/post/post-form/post-form.component";
 import {PostDetailComponent} from "./component/dashboard/post/post-detail/post-detail.component";
+import {CategoryListComponent} from "./component/dashboard/category/category-list/category-list.component";
+import {CategoryFormComponent} from "./component/dashboard/category/category-form/category-form.component";
 
 export const routes: Routes = [
   {
@@ -19,6 +21,9 @@ export const routes: Routes = [
       { path: 'posts/new', component: PostFormComponent },
       { path: 'posts/edit/:id', component: PostFormComponent },
       { path: "posts/:id", component: PostDetailComponent },
+      { path: "categories", component: CategoryListComponent },
+      { path: "categories/new", component: CategoryFormComponent },
+      { path: "categories/edit/:id", component: CategoryFormComponent },
       { path: '', redirectTo: 'stats', pathMatch: 'full' }
     ],
   },

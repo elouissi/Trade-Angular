@@ -1,5 +1,5 @@
 import { Component, Input } from "@angular/core"
-import {CommonModule, NgOptimizedImage} from "@angular/common"
+import { CommonModule, NgOptimizedImage } from "@angular/common"
 import { RouterModule } from "@angular/router"
 
 @Component({
@@ -44,7 +44,18 @@ import { RouterModule } from "@angular/router"
           <svg class="mr-4 h-5 w-5 text-gray-500 dark:text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
           </svg>
-          posts
+          Posts
+        </a>
+
+        <a
+          routerLink="/dashboard/categories"
+          routerLinkActive="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
+          class="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-all duration-200"
+        >
+          <svg class="mr-4 h-5 w-5 text-gray-500 dark:text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+          </svg>
+          Catégories
         </a>
 
         <a
