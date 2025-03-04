@@ -12,7 +12,7 @@ import { RouterModule } from "@angular/router"
       [class.translate-x-[-100%]]="!isOpen"
       class="fixed left-0 top-0 z-40 h-screen w-64 transition-transform duration-300 ease-in-out bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700"
     >
-      <div class="h-16 flex items-center justify-center bg-gradient-to-r from-red-600 to-red-500">
+      <div class="h-16 flex items-center justify-center bg-gradient-to-r from-blue-700 to-blue-400">
         <img
           style=""
           alt="cotrade_logo"
@@ -37,14 +37,14 @@ import { RouterModule } from "@angular/router"
         </a>
 
         <a
-          routerLink="/markets"
+          routerLink="/dashboard/posts"
           routerLinkActive="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
           class="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-all duration-200"
         >
           <svg class="mr-4 h-5 w-5 text-gray-500 dark:text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
           </svg>
-          Markets
+          posts
         </a>
 
         <a

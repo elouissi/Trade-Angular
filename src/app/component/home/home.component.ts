@@ -31,10 +31,8 @@ import { trigger, transition, style, animate, query, stagger } from "@angular/an
 
         <div class="container mx-auto px-4 text-center relative z-10" [@heroContent]>
           <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight" [@letterAnimation]>
-            <span *ngFor="let letter of 'Bienvenue sur coTrade'.split(''); let i = index"
-                  [style.animation-delay]="i * 0.1 + 's'"
-                  class="inline-block">
-              {{letter}}
+            <span >
+              Bienvenue sur CoTrade
             </span>
           </h1>
           <p class="text-xl text-white/90 mb-8 max-w-2xl mx-auto" [@slideUp]>

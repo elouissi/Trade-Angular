@@ -33,7 +33,7 @@ import { CommonModule } from "@angular/common"
           </div>
 
           <div class="flex items-center gap-4">
-            <button class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+            <button class="bg-blue-700 hover:bg-blue-700-dark text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
               Trade Now
             </button>
 

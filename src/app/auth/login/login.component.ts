@@ -1,9 +1,11 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { trigger, transition, style, animate, keyframes } from '@angular/animations';
-import {HeaderComponent} from "../../component/header/header.component";
+import { HeaderComponent } from "../../component/header/header.component";
+import Swal from 'sweetalert2';
+import {AuthService} from "../../service/auth/auth.service";
 
 @Component({
   selector: 'app-login',
@@ -62,10 +64,16 @@ import {HeaderComponent} from "../../component/header/header.component";
           <div>
             <button
               type="submit"
-              [disabled]="!loginForm.valid"
+              [disabled]="!loginForm.valid || isLoading"
               class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out"
-              [ngClass]="{'opacity-50 cursor-not-allowed': !loginForm.valid}"
+              [ngClass]="{'opacity-50 cursor-not-allowed': !loginForm.valid || isLoading}"
             >
+              <span *ngIf="isLoading" class="inline-block animate-spin mr-2">
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </span>
               Se connecter
             </button>
           </div>
@@ -109,8 +117,13 @@ import {HeaderComponent} from "../../component/header/header.component";
 })
 export class LoginComponent {
   loginForm: FormGroup;
+  isLoading: boolean = false;
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private router: Router
+  ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]]
@@ -119,8 +132,37 @@ export class LoginComponent {
 
   onSubmit() {
     if (this.loginForm.valid) {
-      // Implement login logic here
-      console.log('Login submitted', this.loginForm.value);
+      this.isLoading = true;
+      const { email, password } = this.loginForm.value;
+
+      this.authService.login(email, password).subscribe({
+        next: (response) => {
+          this.isLoading = false;
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Connexion réussie!',
+            text: `Bienvenue ${this.authService.geName() || ''}!`,
+            timer: 2000,
+            showConfirmButton: false
+          });
+
+          // Redirect after successful login
+          setTimeout(() => {
+            this.router.navigate(['/dashboard']);
+          }, 2000);
+        },
+        error: (error) => {
+          this.isLoading = false;
+
+          Swal.fire({
+            icon: 'error',
+            title: 'Échec de la connexion',
+            text: error.error?.message || 'Identifiants invalides. Veuillez réessayer.',
+            confirmButtonText: 'OK'
+          });
+        }
+      });
     } else {
       // Mark all fields as touched to trigger validation messages
       Object.keys(this.loginForm.controls).forEach(field => {

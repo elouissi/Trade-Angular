@@ -1,9 +1,11 @@
-import { Component } from "@angular/core"
-import { CommonModule } from "@angular/common"
-import { ReactiveFormsModule,  FormBuilder,  FormGroup, Validators } from "@angular/forms"
-import { RouterModule } from "@angular/router"
-import { trigger, transition, style, animate, keyframes } from "@angular/animations"
-import { HeaderComponent } from "../../component/header/header.component"
+import { Component } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from "@angular/forms";
+import { RouterModule, Router } from "@angular/router";
+import { trigger, transition, style, animate, keyframes } from "@angular/animations";
+import { HeaderComponent } from "../../component/header/header.component";
+import Swal from "sweetalert2";
+import {AuthService} from "../../service/auth/auth.service";
 
 @Component({
   selector: "app-register",
@@ -20,7 +22,7 @@ import { HeaderComponent } from "../../component/header/header.component"
 
         <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-6">
           <div>
-            <label for="username" class="block text-sm font-medium text-white mb-1">Nom d'utilisateur</label>
+            <label for="name" class="block text-sm font-medium text-white mb-1">Nom</label>
             <div class="relative rounded-md">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -28,17 +30,18 @@ import { HeaderComponent } from "../../component/header/header.component"
                 </svg>
               </div>
               <input
-                formControlName="username"
+                formControlName="name"
                 type="text"
-                id="username"
+                id="name"
                 class="bg-gray-800 text-white focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 py-2 border border-gray-700 rounded-md"
-                placeholder="JohnDoe"
+                placeholder="Votre nom"
               >
             </div>
-            <div *ngIf="registerForm.get('username')?.invalid && registerForm.get('username')?.touched" class="text-red-500 text-sm mt-1">
-              Nom d'utilisateur requis (3 caractères minimum)
+            <div *ngIf="registerForm.get('name')?.invalid && registerForm.get('name')?.touched" class="text-red-500 text-sm mt-1">
+              Nom requis (3 caractères minimum)
             </div>
           </div>
+
           <div>
             <label for="email" class="block text-sm font-medium text-white mb-1">Email</label>
             <div class="relative rounded-md">
@@ -60,6 +63,28 @@ import { HeaderComponent } from "../../component/header/header.component"
               Email invalide
             </div>
           </div>
+
+          <div>
+            <label for="location" class="block text-sm font-medium text-white mb-1">Localisation</label>
+            <div class="relative rounded-md">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <input
+                formControlName="location"
+                type="text"
+                id="location"
+                class="bg-gray-800 text-white focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 py-2 border border-gray-700 rounded-md"
+                placeholder="Ville, Pays"
+              >
+            </div>
+            <div *ngIf="registerForm.get('location')?.invalid && registerForm.get('location')?.touched" class="text-red-500 text-sm mt-1">
+              Localisation requise
+            </div>
+          </div>
+
           <div>
             <label for="password" class="block text-sm font-medium text-white mb-1">Mot de passe</label>
             <div class="relative rounded-md">
@@ -80,6 +105,7 @@ import { HeaderComponent } from "../../component/header/header.component"
               Mot de passe requis (6 caractères minimum)
             </div>
           </div>
+
           <div>
             <label for="confirmPassword" class="block text-sm font-medium text-white mb-1">Confirmer le mot de passe</label>
             <div class="relative rounded-md">
@@ -103,13 +129,20 @@ import { HeaderComponent } from "../../component/header/header.component"
               Les mots de passe ne correspondent pas
             </div>
           </div>
+
           <div>
             <button
               type="submit"
-              [disabled]="!registerForm.valid"
+              [disabled]="!registerForm.valid || isLoading"
               class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out"
-              [ngClass]="{'opacity-50 cursor-not-allowed': !registerForm.valid}"
+              [ngClass]="{'opacity-50 cursor-not-allowed': !registerForm.valid || isLoading}"
             >
+              <span *ngIf="isLoading" class="inline-block animate-spin mr-2">
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </span>
               S'inscrire
             </button>
           </div>
@@ -157,37 +190,77 @@ import { HeaderComponent } from "../../component/header/header.component"
   ],
 })
 export class RegisterComponent {
-  registerForm: FormGroup
+  registerForm: FormGroup;
+  isLoading: boolean = false;
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private router: Router
+  ) {
     this.registerForm = this.fb.group(
       {
-        username: ["", [Validators.required, Validators.minLength(3)]],
+        name: ["", [Validators.required, Validators.minLength(3)]],
         email: ["", [Validators.required, Validators.email]],
+        location: ["", [Validators.required]],
         password: ["", [Validators.required, Validators.minLength(6)]],
         confirmPassword: ["", Validators.required],
       },
       { validator: this.checkPasswords },
-    )
+    );
   }
 
   checkPasswords(group: FormGroup) {
-    const pass = group.get("password")?.value
-    const confirmPass = group.get("confirmPassword")?.value
-    return pass === confirmPass ? null : { notSame: true }
+    const pass = group.get("password")?.value;
+    const confirmPass = group.get("confirmPassword")?.value;
+    return pass === confirmPass ? null : { notSame: true };
   }
 
   onSubmit() {
     if (this.registerForm.valid) {
-      // Implement registration logic here
-      console.log("Registration submitted", this.registerForm.value)
+      this.isLoading = true;
+
+      const registrationData = {
+        name: this.registerForm.get('name')?.value,
+        email: this.registerForm.get('email')?.value,
+        password: this.registerForm.get('password')?.value,
+        location: this.registerForm.get('location')?.value
+      };
+
+      this.authService.register(registrationData).subscribe({
+        next: (response) => {
+          this.isLoading = false;
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Inscription réussie!',
+            text: 'Votre compte a été créé avec succès.',
+            timer: 2000,
+            showConfirmButton: false
+          });
+
+          // Redirect after successful registration
+          setTimeout(() => {
+            this.router.navigate(['/dashboard']);
+          }, 2000);
+        },
+        error: (error) => {
+          this.isLoading = false;
+
+          Swal.fire({
+            icon: 'error',
+            title: 'Échec de l\'inscription',
+            text: error.error?.message || 'Une erreur est survenue lors de l\'inscription. Veuillez réessayer.',
+            confirmButtonText: 'OK'
+          });
+        }
+      });
     } else {
       // Mark all fields as touched to trigger validation messages
       Object.keys(this.registerForm.controls).forEach((field) => {
-        const control = this.registerForm.get(field)
-        control?.markAsTouched({ onlySelf: true })
-      })
+        const control = this.registerForm.get(field);
+        control?.markAsTouched({ onlySelf: true });
+      });
     }
   }
 }
-
