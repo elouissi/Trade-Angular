@@ -25,7 +25,7 @@ import { RouterModule } from "@angular/router"
 
       <nav class="mt-5 px-2 space-y-1">
         <a
-          routerLink="/"
+          routerLink="stats"
           routerLinkActive="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
           [routerLinkActiveOptions]="{exact: true}"
           class="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-all duration-200"

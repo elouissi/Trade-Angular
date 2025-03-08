@@ -9,6 +9,14 @@ import {PostFormComponent} from "./component/dashboard/post/post-form/post-form.
 import {PostDetailComponent} from "./component/dashboard/post/post-detail/post-detail.component";
 import {CategoryListComponent} from "./component/dashboard/category/category-list/category-list.component";
 import {CategoryFormComponent} from "./component/dashboard/category/category-form/category-form.component";
+import {ProfileLayoutComponent} from "./component/profile/profile-layout/profile-layout.component";
+import {ProfileViewComponent} from "./component/profile/profile-view/profile-view.component";
+import {ProfileEditComponent} from "./component/profile/profile-edit/profile-edit.component";
+import {ProfileSecurityComponent} from "./component/profile/profil-security/profil-security.component";
+import {PostsComponent} from "./component/posts/posts.component";
+import {ExchangeComponent} from "./component/exchange/exchange.component";
+import {ExchangesListComponent} from "./component/exchange/exchanges-list/exchanges-list.component";
+
 
 export const routes: Routes = [
   {
@@ -27,9 +35,24 @@ export const routes: Routes = [
       { path: '', redirectTo: 'stats', pathMatch: 'full' }
     ],
   },
-  {path: 'details', component: PostDetailComponent},
+  {path: 'details/:id', component: PostDetailComponent},
+  { path: "posts", component: PostsComponent },
+  { path: "posts/:id", component: PostDetailComponent },
+  { path: "exchanges", component: ExchangesListComponent },
+  { path: "exchanges/user/:receiverId", component: ExchangeComponent },
   {path: "login", component: LoginComponent},
   {path: "register", component: RegisterComponent},
   {path: "home", component: HomeComponent},
+  { path: "", component: HomeComponent },
+
+  {
+    path: "profile",
+    component: ProfileLayoutComponent,
+    children: [
+      { path: "", component: ProfileViewComponent },
+      { path: "edit", component: ProfileEditComponent },
+      { path: "security", component: ProfileSecurityComponent },
+    ]
+  },
 
 ];
