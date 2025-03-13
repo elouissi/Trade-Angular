@@ -128,6 +128,10 @@ export class AuthService {
     }
 
   }
+  isRole(role:string): boolean {
+    return this.getRole() === role;
+
+  }
 
 
   isAuthenticated(): boolean {

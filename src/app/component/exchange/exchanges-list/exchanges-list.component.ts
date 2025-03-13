@@ -3,22 +3,13 @@ import { CommonModule } from "@angular/common"
 import { RouterModule } from "@angular/router"
 import { FormsModule } from "@angular/forms"
 import { trigger, transition, style, animate, query, stagger } from "@angular/animations"
-import {Message} from "../../../models/message/message.module";
-import {HeaderComponent} from "../../header/header.component";
-import {MessageService} from "../../../service/message/message.service";
-import {AuthService} from "../../../service/auth/auth.service";
-import {PostService} from "../../../service/post/post.service";
+import { HeaderComponent } from "../../header/header.component"
+import  { MessageService } from "../../../service/message/message.service"
+import  { AuthService } from "../../../service/auth/auth.service"
+import  { PostService } from "../../../service/post/post.service"
+import {ConversationDTO} from "../../../models/conversation/conversation.module";
+import {ConversationService} from "../../../service/Conversation/conversation.service";
 
-
-interface Conversation {
-  userId: string
-  userName: string
-  lastMessage: Message
-  unreadCount: number
-  postId?: string
-  postTitle?: string
-  postImage?: string
-}
 
 @Component({
   selector: "app-exchanges-list",
@@ -48,7 +39,7 @@ interface Conversation {
       </section>
 
       <!-- Exchanges List Section -->
-      <section class="py-12 bg-white">
+      <section class="py-12">
         <div class="container mx-auto px-4">
           <div class="max-w-5xl mx-auto">
             <!-- Search and Filter -->
@@ -84,7 +75,7 @@ interface Conversation {
             </div>
 
             <!-- Empty state -->
-            <div *ngIf="!isLoading && filteredConversations.length === 0" class="text-center py-16 bg-gray-50 rounded-xl">
+            <div *ngIf="!isLoading && filteredConversations.length === 0" class="text-center py-16 bg-gray-50/50 rounded-xl">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
@@ -99,9 +90,9 @@ interface Conversation {
             <div *ngIf="!isLoading && filteredConversations.length > 0" class="space-y-4" [@staggerAnimation]="filteredConversations.length">
               <div *ngFor="let conversation of filteredConversations"
                    class="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
-                   [class.border-l-4]="conversation.unreadCount > 0"
-                   [class.border-indigo-500]="conversation.unreadCount > 0">
-                <a [routerLink]="conversation.postId ? ['/exchanges', conversation.postId] : ['/exchanges/user', conversation.userId]" class="block p-4">
+                   [class.border-l-4]="conversation.unreadCount && conversation.unreadCount > 0"
+                   [class.border-indigo-500]="conversation.unreadCount && conversation.unreadCount > 0">
+                <a [routerLink]="['/exchanges', conversation.id]" class="block p-4">
                   <div class="flex items-start">
                     <!-- User avatar or post image -->
                     <div class="flex-shrink-0 mr-4">
@@ -109,7 +100,7 @@ interface Conversation {
                         <img [src]="conversation.postImage" [alt]="conversation.postTitle" class="h-full w-full object-cover" />
                       </div>
                       <div *ngIf="!conversation.postImage" class="h-12 w-12 rounded-full bg-gradient-to-r from-indigo-500 to-violet-600 flex items-center justify-center text-white">
-                        {{ getUserInitials(conversation.userName) }}
+                        {{ getUserInitials(conversation.senderId === currentUserId ? conversation.receiverName || 'Utilisateur' : conversation.senderName || 'Utilisateur') }}
                       </div>
                     </div>
 
@@ -117,15 +108,15 @@ interface Conversation {
                     <div class="flex-1 min-w-0">
                       <div class="flex justify-between items-start">
                         <h3 class="text-lg font-semibold text-gray-900 truncate">
-                          {{ conversation.postTitle || conversation.userName }}
+                          {{ conversation.postTitle || (conversation.senderId === currentUserId ? conversation.receiverName : conversation.senderName) || 'Conversation' }}
                         </h3>
                         <span class="text-xs text-gray-500">
-                          {{ formatMessageTime(conversation.lastMessage.createdAt) }}
+                          {{ formatMessageTime(conversation.updatedAt) }}
                         </span>
                       </div>
 
                       <p class="text-sm text-gray-600 mt-1 line-clamp-1">
-                        {{ conversation.lastMessage.body }}
+                        {{ conversation.lastMessage || 'Aucun message' }}
                       </p>
 
                       <div class="flex justify-between items-center mt-2">
@@ -133,10 +124,10 @@ interface Conversation {
                           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                           </svg>
-                          {{ conversation.lastMessage.senderId === currentUserId ? 'Vous' : conversation.userName }}
+                          {{ conversation.senderId === currentUserId ? 'Vous' : conversation.senderName || 'Utilisateur' }}
                         </div>
 
-                        <div *ngIf="conversation.unreadCount > 0" class="bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                        <div *ngIf="conversation.unreadCount && conversation.unreadCount > 0" class="bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded-full">
                           {{ conversation.unreadCount }}
                         </div>
                       </div>
@@ -169,9 +160,19 @@ interface Conversation {
 
       .line-clamp-1 {
         display: -webkit-box;
+      }
+
+      .line-clamp-1 {
+        display: -webkit-box;
         -webkit-line-clamp: 1;
         -webkit-box-orient: vertical;
         overflow: hidden;
+      }
+
+      :host {
+        display: block;
+        min-height: 100vh;
+        background-color: white;
       }
     `,
   ],
@@ -197,20 +198,18 @@ interface Conversation {
   ],
 })
 export class ExchangesListComponent implements OnInit {
-  conversations: Conversation[] = []
-  filteredConversations: Conversation[] = []
+  conversations: ConversationDTO[] = []
+  filteredConversations: ConversationDTO[] = []
   isLoading = true
   currentUserId = ""
   searchTerm = ""
   filterStatus: "all" | "read" | "unread" = "all"
 
-  // Map to store post details
-  postDetails: Map<string, { title: string; image: string }> = new Map()
-
   constructor(
     private messageService: MessageService,
     private authService: AuthService,
     private postService: PostService,
+    private conversationService: ConversationService,
   ) {}
 
   ngOnInit(): void {
@@ -223,98 +222,17 @@ export class ExchangesListComponent implements OnInit {
   }
 
   loadConversations(): void {
-    // Load both sent and received messages
-    Promise.all([
-      this.messageService.getSentMessages(this.currentUserId).toPromise(),
-      this.messageService.getReceivedMessages(this.currentUserId).toPromise(),
-    ])
-      .then(([sentMessages, receivedMessages]) => {
-        // Combine and sort all messages by date
-        const allMessages = [...(sentMessages || []), ...(receivedMessages || [])].sort((a, b) => {
-          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-        })
-
-        // Group messages by conversation (other user)
-        const conversationMap = new Map<string, Message[]>()
-
-        allMessages.forEach((message) => {
-          const otherUserId = message.senderId === this.currentUserId ? message.receiverId : message.senderId
-
-          if (!conversationMap.has(otherUserId)) {
-            conversationMap.set(otherUserId, [])
-          }
-
-          conversationMap.get(otherUserId)?.push(message)
-        })
-
-        // Create conversation objects
-        const conversations: Conversation[] = []
-
-        conversationMap.forEach((messages, userId) => {
-          // Sort messages by date (newest first)
-          messages.sort((a, b) => {
-            return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-          })
-
-          const lastMessage = messages[0]
-          const unreadCount = messages.filter((m) => !m.isRead && m.senderId !== this.currentUserId).length
-
-          // Create a conversation object
-          const conversation: Conversation = {
-            userId,
-            userName: `Utilisateur ${userId.substring(0, 5)}`,
-            lastMessage,
-            unreadCount,
-          }
-
-          conversations.push(conversation)
-
-          // Try to find post information if available
-          // This is a simplified approach - in a real app, you'd have a proper way to link messages to posts
-          this.tryFindPostInfo(messages, conversation)
-        })
-
-        // Sort conversations by last message date
-        this.conversations = conversations.sort((a, b) => {
-          return new Date(b.lastMessage.createdAt || 0).getTime() - new Date(a.lastMessage.createdAt || 0).getTime()
-        })
-
-        this.filterConversations()
+    this.conversationService.getConversationsByUserId(this.currentUserId).subscribe({
+      next: (conversations) => {
+        this.conversations = conversations
+        this.filteredConversations = conversations
         this.isLoading = false
-      })
-      .catch((error) => {
+      },
+      error: (error) => {
         console.error("Erreur lors du chargement des conversations:", error)
         this.isLoading = false
-      })
-  }
-
-  tryFindPostInfo(messages: Message[], conversation: Conversation): void {
-    // This is a simplified approach to find post info
-    // In a real app, you'd have a proper way to link messages to posts
-
-    // Check message bodies for post IDs (this is just a simulation)
-    const postIdMatch = messages.find(
-      (m) => m.body.includes("objet") || m.body.includes("post") || m.body.includes("annonce"),
-    )
-
-    if (postIdMatch) {
-      // Simulate finding a post ID
-      const randomPostId = "post-" + Math.floor(Math.random() * 1000)
-
-      // Load post details
-      this.postService.getAllPosts().subscribe((posts) => {
-        if (posts.length > 0) {
-          const randomPost = posts[Math.floor(Math.random() * posts.length)]
-
-          conversation.postId = randomPost.id
-          conversation.postTitle = randomPost.title
-
-          if (randomPost.photos && randomPost.photos.length > 0) {
-            conversation.postImage = "http://localhost:8445/" + randomPost.photos[0].filePath
-          }
-        }
-      })
-    }
+      },
+    })
   }
 
   filterConversations(): void {
@@ -322,15 +240,17 @@ export class ExchangesListComponent implements OnInit {
       // Filter by search term
       const matchesSearch =
         !this.searchTerm ||
-        conversation.userName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        (conversation.senderName && conversation.senderName.toLowerCase().includes(this.searchTerm.toLowerCase())) ||
+        (conversation.receiverName &&
+          conversation.receiverName.toLowerCase().includes(this.searchTerm.toLowerCase())) ||
         (conversation.postTitle && conversation.postTitle.toLowerCase().includes(this.searchTerm.toLowerCase())) ||
-        conversation.lastMessage.body.toLowerCase().includes(this.searchTerm.toLowerCase())
+        (conversation.lastMessage && conversation.lastMessage.toLowerCase().includes(this.searchTerm.toLowerCase()))
 
       // Filter by read/unread status
       const matchesStatus =
         this.filterStatus === "all" ||
-        (this.filterStatus === "unread" && conversation.unreadCount > 0) ||
-        (this.filterStatus === "read" && conversation.unreadCount === 0)
+        (this.filterStatus === "unread" && conversation.unreadCount && conversation.unreadCount > 0) ||
+        (this.filterStatus === "read" && (!conversation.unreadCount || conversation.unreadCount === 0))
 
       return matchesSearch && matchesStatus
     })
@@ -370,6 +290,29 @@ export class ExchangesListComponent implements OnInit {
 
     // Sinon, afficher la date
     return messageDate.toLocaleDateString()
+  }
+
+  loadPostDetails(postId: string, conversation: ConversationDTO): void {
+    if (!postId) {
+      conversation.postTitle = "Post inconnu"
+      return
+    }
+
+    this.postService.getPostById(postId).subscribe({
+      next: (post) => {
+        if (post) {
+          conversation.postTitle = post.title
+          if (post.photos && post.photos.length > 0) {
+            conversation.postImage = "http://localhost:8445/" + post.photos[0].filePath
+          }
+        }
+      },
+      error: (error) => {
+        console.error(`Erreur lors du chargement du post ${postId}:`, error)
+        // En cas d'erreur, on met un titre par défaut
+        conversation.postTitle = "Post indisponible"
+      },
+    })
   }
 }
 

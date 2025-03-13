@@ -12,6 +12,5 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     }
   });
 
-  console.log('Request headers:', clonedReq.headers.get('Authorization'));
   return next(clonedReq);
 };

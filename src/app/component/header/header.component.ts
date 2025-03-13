@@ -1,6 +1,6 @@
 import { Component, HostListener } from "@angular/core"
 import { CommonModule, NgOptimizedImage } from "@angular/common"
-import { RouterModule } from "@angular/router"
+import {Route, Router, RouterModule} from "@angular/router"
 import  { AuthService } from "../../service/auth/auth.service"
 import { trigger, transition, style, animate } from "@angular/animations"
 
@@ -41,6 +41,7 @@ import { trigger, transition, style, animate } from "@angular/animations"
                 Objets
               </a>
               <a
+                *ngIf="isRole('TRADER') && isAuthenticated() "
                 routerLink="/exchanges"
                 routerLinkActive="bg-indigo-700 text-white"
                 class="px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-indigo-500 transition duration-150 ease-in-out"
@@ -174,10 +175,13 @@ import { trigger, transition, style, animate } from "@angular/animations"
 export class HeaderComponent {
   isDropdownOpen = false
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService,private router:Router) {}
 
   isAuthenticated() {
     return this.authService.isAuthenticated()
+  }
+  isRole(role:string) {
+    return this.authService.isRole(role)
   }
 
   getName() {
@@ -201,6 +205,7 @@ export class HeaderComponent {
   logout() {
     this.isDropdownOpen = false
     this.authService.logout()
+    this.router.navigate(['/login']);
   }
 
   @HostListener("document:click", ["$event"])

@@ -4,12 +4,12 @@ import {  ActivatedRoute, RouterModule } from "@angular/router"
 import { HeaderComponent } from "../header/header.component"
 import { FormsModule } from "@angular/forms"
 import { trigger, transition, style, animate, query, stagger } from "@angular/animations"
-import {Message, User} from "../../models/message/message.module";
-import {Post} from "../../models/post/post.module";
-import {MessageService} from "../../service/message/message.service";
-import {PostService} from "../../service/post/post.service";
-import {AuthService} from "../../service/auth/auth.service";
-
+import  { Message, User } from "../../models/message/message.module"
+import  { Post } from "../../models/post/post.module"
+import  { MessageService } from "../../service/message/message.service"
+import  { PostService } from "../../service/post/post.service"
+import  { AuthService } from "../../service/auth/auth.service"
+import {ConversationService} from "../../service/Conversation/conversation.service";
 
 @Component({
   selector: "app-exchange",
@@ -242,7 +242,7 @@ import {AuthService} from "../../service/auth/auth.service";
                         [(ngModel)]="newMessage"
                         name="message"
                         placeholder="Écrivez votre message..."
-                        class="flex-1 mx-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        class="flex-1 mx-2 px-4 py-2 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                       <button
                         type="submit"
@@ -314,7 +314,6 @@ import {AuthService} from "../../service/auth/auth.service";
   ],
 })
 export class ExchangeComponent implements OnInit, AfterViewChecked {
-  // Modifier la déclaration de messageContainer pour utiliser une approche optionnelle
   @ViewChild("messageContainer") private messageContainer?: ElementRef
 
   messages: Message[] = []
@@ -326,6 +325,7 @@ export class ExchangeComponent implements OnInit, AfterViewChecked {
   receiverName = "Utilisateur"
   currentUserId = ""
   receiverId = ""
+  conversationId = ""
   isOnline = Math.random() > 0.5 // Simuler l'état en ligne aléatoirement
 
   // Informations utilisateur
@@ -337,33 +337,93 @@ export class ExchangeComponent implements OnInit, AfterViewChecked {
     private messageService: MessageService,
     private postService: PostService,
     private authService: AuthService,
+    private conversationService: ConversationService,
   ) {}
 
   ngOnInit(): void {
-    this.currentUserId = this.authService.getId() || ""
+    this.currentUserId = this.authService.getId() || "";
+    const role = this.authService.getRole();
 
-    // Charger les informations de l'utilisateur courant
-    if (this.currentUserId) {
-      this.loadUserInfo(this.currentUserId, "sender")
-    }
+    const id = this.route.snapshot.paramMap.get("id") || "";
+    const receiverId = this.route.snapshot.paramMap.get("receiverId");
 
-    const postId = this.route.snapshot.paramMap.get("id")
-    if (postId) {
-      this.loadPost(postId)
-    } else {
-      // Si pas de postId, on charge directement les messages entre deux utilisateurs
-      const receiverId = this.route.snapshot.paramMap.get("receiverId")
+    if (role === 'TRADER') {
+      // TRADER consulte une conversation existante (ID est l'ID de la conversation)
+      this.conversationId = id;
+      this.loadMessagesFromConversation();
+    } else if (role === 'VISITOR') {
       if (receiverId) {
-        this.receiverId = receiverId
-        this.loadUserInfo(receiverId, "receiver")
-        this.loadMessages()
+        // VISITOR consulte une conversation existante (ID est l'ID de la conversation)
+        this.conversationId = id;
+        this.loadMessagesFromConversation();
       } else {
-        this.isLoading = false
+        // VISITOR crée une nouvelle conversation (ID est l'ID du post)
+        this.loadPost(id);
       }
     }
   }
 
-  ngAfterViewChecked() {
+  loadPost(postId: string): void {
+    this.postService.getPostById(postId).subscribe({
+      next: (post) => {
+        this.post = post;
+        this.postTitle = post.title;
+        this.receiverId = post.userId; // Le TRADER est le propriétaire du post
+
+        // Créer ou récupérer la conversation
+        this.findOrCreateConversation(postId);
+      },
+      error: (error) => {
+        console.error("Erreur lors du chargement du post:", error);
+        this.isLoading = false;
+      },
+    });
+  }
+
+  loadMessagesFromConversation(): void {
+    if (!this.conversationId) {
+      console.error("No conversation ID available");
+      this.isLoading = false;
+      return;
+    }
+
+    this.conversationService.getConversationById(this.conversationId).subscribe({
+      next: (conversation) => {
+        // Charger les messages de la conversation
+        this.messageService.getMessagesByConversation(this.conversationId).subscribe({
+          next: (messages) => {
+            this.messages = messages;
+            this.isLoading = false;
+            this.scrollToBottom();
+
+            // Marquer les messages non lus comme lus
+            this.markUnreadMessagesAsRead(messages);
+          },
+          error: (error) => {
+            console.error("Erreur lors du chargement des messages:", error);
+            this.isLoading = false;
+          },
+        });
+
+        // Charger les détails du post associé à la conversation (si nécessaire)
+        if (conversation.postId) {
+          this.postService.getPostById(conversation.postId).subscribe({
+            next: (post) => {
+              this.post = post;
+              this.postTitle = post.title;
+            },
+            error: (error) => {
+              console.error("Erreur lors du chargement du post:", error);
+            },
+          });
+        }
+      },
+      error: (error) => {
+        console.error("Erreur lors du chargement de la conversation:", error);
+        this.isLoading = false;
+      },
+    });
+  }  ngAfterViewChecked() {
     this.scrollToBottom()
   }
 
@@ -383,55 +443,57 @@ export class ExchangeComponent implements OnInit, AfterViewChecked {
     })
   }
 
-  loadPost(postId: string): void {
-    this.postService.getPostById(postId).subscribe({
-      next: (post) => {
-        this.post = post
-        this.postTitle = post.title
-        this.receiverId = post.userId
 
-        // Charger les informations du propriétaire du post
-        this.loadUserInfo(post.userId, "receiver")
-        this.loadMessages()
-      },
-      error: (error) => {
-        console.error("Erreur lors du chargement du post:", error)
-        this.isLoading = false
-      },
-    })
-  }
+
 
   loadMessages(): void {
     if (!this.currentUserId || !this.receiverId) {
-      this.isLoading = false
-      return
+      this.isLoading = false;
+      return;
     }
 
+    // Si nous avons un post, utiliser la méthode findOrCreateConversation
+    if (this.post?.id) {
+      this.findOrCreateConversation(this.post.id);
+      return;
+    }
+
+    // Sinon, charger les messages directement entre les utilisateurs
     this.messageService.getMessagesBetweenUsers(this.currentUserId, this.receiverId).subscribe({
       next: (messages) => {
-        this.messages = messages
-        this.isLoading = false
-        this.scrollToBottom()
+        this.messages = messages;
+        this.isLoading = false;
+        this.scrollToBottom();
 
-        // Mark unread messages as read
-        messages
-          .filter((m) => !m.isRead && m.senderId === this.receiverId)
-          .forEach((message) => {
-            if (message.id) {
-              this.messageService.markAsRead(message.id).subscribe()
-            }
-          })
+        // Marquer les messages non lus comme lus
+        this.markUnreadMessagesAsRead(messages);
       },
       error: (error) => {
-        console.error("Erreur lors du chargement des messages:", error)
-        this.isLoading = false
+        console.error("Erreur lors du chargement des messages:", error);
+        this.isLoading = false;
       },
-    })
+    });
   }
+  findOrCreateConversation(postId: string): void {
+    if (!this.currentUserId || !this.receiverId) {
+      this.isLoading = false;
+      return;
+    }
 
+    this.conversationService.getOrCreateConversation(this.currentUserId, this.receiverId, postId).subscribe({
+      next: (conversation) => {
+        this.conversationId = conversation.id || "";
+        this.loadMessagesFromConversation();
+      },
+      error: (error) => {
+        console.error("Erreur lors de la récupération/création de la conversation:", error);
+        this.isLoading = false;
+      },
+    });
+  }
   markUnreadMessagesAsRead(messages: Message[]): void {
     // Trouver les messages non lus envoyés par l'autre utilisateur
-    const unreadMessages = messages.filter((m) => !m.isRead && m.senderId === this.receiverId)
+    const unreadMessages = messages.filter((m) => !m.isRead && m.senderId !== this.currentUserId)
 
     // Marquer chaque message non lu comme lu
     unreadMessages.forEach((message) => {
@@ -451,17 +513,22 @@ export class ExchangeComponent implements OnInit, AfterViewChecked {
   sendMessage(event: Event): void {
     event.preventDefault()
 
-    if (!this.newMessage.trim() || !this.currentUserId || !this.receiverId) return
+    if (!this.newMessage.trim() || !this.conversationId) return
 
     const message: Message = {
       body: this.newMessage,
       isRead: false,
+      conversationId: this.conversationId,
+    }
+
+    // Optimistic UI update
+    const tempMessage = {
+      ...message,
+      createdAt: new Date(),
       senderId: this.currentUserId,
       receiverId: this.receiverId,
     }
 
-    // Optimistic UI update
-    const tempMessage = { ...message, createdAt: new Date() }
     this.messages.push(tempMessage)
 
     // Mettre à jour les groupes de messages
@@ -529,40 +596,6 @@ export class ExchangeComponent implements OnInit, AfterViewChecked {
     return messageDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   }
 
-  formatDateHeader(dateStr: string): string {
-    const date = new Date(dateStr)
-    const now = new Date()
-
-    // Si c'est aujourd'hui
-    if (date.toDateString() === now.toDateString()) {
-      return "Aujourd'hui"
-    }
-
-    // Si c'est hier
-    const yesterday = new Date(now)
-    yesterday.setDate(now.getDate() - 1)
-    if (date.toDateString() === yesterday.toDateString()) {
-      return "Hier"
-    }
-
-    // Si c'est cette semaine
-    const daysDiff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
-    if (daysDiff < 7) {
-      return date.toLocaleDateString(undefined, { weekday: "long" })
-    }
-
-    // Sinon, afficher la date complète
-    return date.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })
-  }
-
-  formatDate(date: Date | undefined): string {
-    if (!date) return ""
-
-    const formattedDate = new Date(date)
-    return formattedDate.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })
-  }
-
-  // Puis modifier la méthode scrollToBottom pour vérifier si messageContainer existe
   scrollToBottom(): void {
     try {
       if (this.messageContainer) {

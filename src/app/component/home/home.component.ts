@@ -1,8 +1,13 @@
-import { Component } from "@angular/core"
+import { Component, type OnInit } from "@angular/core"
 import { CommonModule, NgOptimizedImage } from "@angular/common"
 import { RouterModule } from "@angular/router"
 import { HeaderComponent } from "../header/header.component"
 import { trigger, transition, style, animate, query, stagger } from "@angular/animations"
+import  { PostService } from "../../service/post/post.service"
+import  { CategoryService } from "../../service/category/category.service"
+import  { UserService } from "../../service/user/user.service"
+import  { Post } from "../../models/post/post.module"
+import  { Category } from "../../models/category/category.module"
 
 @Component({
   selector: "app-home",
@@ -31,7 +36,7 @@ import { trigger, transition, style, animate, query, stagger } from "@angular/an
 
         <div class="container mx-auto px-4 text-center relative z-10" [@heroContent]>
           <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight" [@letterAnimation]>
-            <span >
+            <span>
               Bienvenue sur CoTrade
             </span>
           </h1>
@@ -176,77 +181,180 @@ import { trigger, transition, style, animate, query, stagger } from "@angular/an
           </div>
         </div>
       </section>
+
       <!-- Featured Objects Section -->
       <section class="py-20 bg-gray-100">
         <div class="container mx-auto px-4">
           <h2 class="text-3xl text-black font-bold text-center mb-12">Objets en vedette</h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
 
-            <!-- Objet 1: Vélo vintage -->
-            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-              <!-- SVG pour vélo vintage -->
-              <img ngSrc="../../../assets/images/category1.jpg" height="150" width="350">
-
-              <div class="p-4">
-                <h3 class="text-lg font-semibold mb-2">Vélo vintage</h3>
-                <p class="text-gray-600">Vélo des années 70 en excellent état</p>
-              </div>
-            </div>
-
-            <!-- Objet 2: Collection de livres -->
-            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-              <!-- SVG pour collection de livres -->
-              <img ngSrc="../../../assets/images/category2.jpg" height="150" width="350">
-
-              <div class="p-4">
-                <h3 class="text-lg font-semibold mb-2">Collection de livres</h3>
-                <p class="text-gray-600">Lot de romans classiques</p>
-              </div>
-            </div>
-
-            <!-- Objet 3: Appareil photo rétro -->
-            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-              <!-- SVG pour appareil photo rétro -->
-              <img ngSrc="../../../assets/images/category3.jpg" height="150" width="350">
-              <div class="p-4">
-                <h3 class="text-lg font-semibold mb-2">Appareil photo rétro</h3>
-                <p class="text-gray-600">Appareil photo argentique fonctionnel</p>
-              </div>
-            </div>
-
-            <!-- Objet 4: Plante d'intérieur -->
-            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-              <!-- SVG pour plante d'intérieur -->
-              <img ngSrc="../../../assets/images/category4.jpg" height="150" width="350">
-              <div class="p-4">
-                <h3 class="text-lg font-semibold mb-2">Plante d'intérieur</h3>
-                <p class="text-gray-600">Monstera en parfaite santé</p>
-              </div>
-            </div>
-
+          <!-- Loading state -->
+          <div *ngIf="isLoading" class="flex justify-center items-center py-10">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-indigo-600"></div>
           </div>
-        </div>
-      </section>
-      <!-- Testimonials Section -->
-      <section class="py-20 bg-gradient-to-r from-indigo-600 to-violet-700">
-        <div class="container mx-auto px-4">
-          <h2 class="text-3xl font-bold text-center text-white mb-12">Témoignages</h2>
-          <div class="overflow-x-auto">
-            <div class="flex gap-6 pb-8" style="width: max-content; padding-left: 1rem; padding-right: 1rem;">
-              <div *ngFor="let testimonial of testimonials"
-                   class="w-[300px] bg-white rounded-lg p-6 shadow-xl" [@fadeInRight]>
-                <img [src]="testimonial.image" [alt]="testimonial.author"
-                     class="w-20 h-20 rounded-full mx-auto mb-4 object-cover">
-                <p class="text-gray-600 mb-4">"{{ testimonial.content }}"</p>
-                <div class="text-center">
-                  <p class="font-semibold text-gray-900">{{ testimonial.author }}</p>
-                  <p class="text-sm text-gray-500">{{ testimonial.role }}</p>
+
+          <!-- Error state -->
+          <div *ngIf="error" class="text-center py-10">
+            <p class="text-red-500">{{ error }}</p>
+          </div>
+
+          <div *ngIf="!isLoading && !error" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div *ngFor="let post of featuredPosts" class="bg-white rounded-lg shadow-lg overflow-hidden">
+              <div class="h-48 overflow-hidden">
+                <img
+                  *ngIf="post.photos && post.photos.length > 0"
+                  [src]="getPostImage(post)"
+                  [alt]="post.title"
+                  class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                />
+                <img
+                  *ngIf="!post.photos || post.photos.length === 0"
+                  src="../../../assets/images/placeholder.jpg"
+                  [alt]="post.title"
+                  class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                />
+              </div>
+              <div class="p-4">
+                <h3 class="text-lg font-semibold mb-2">{{ post.title }}</h3>
+                <p class="text-gray-600 line-clamp-2">{{ post.description }}</p>
+                <div class="mt-4 flex justify-between items-center">
+                  <span class="text-sm text-indigo-600">{{ post.category }}</span>
+                  <a [routerLink]="['/posts', post.id]" class="text-sm text-indigo-600 hover:text-indigo-800 flex items-center">
+                    Voir détails
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                  </a>
                 </div>
               </div>
             </div>
           </div>
+
+          <!-- No posts state -->
+          <div *ngIf="!isLoading && !error && featuredPosts.length === 0" class="text-center py-10">
+            <p class="text-gray-500">Aucun objet en vedette pour le moment.</p>
+          </div>
         </div>
       </section>
+
+      <!-- Categories Section -->
+      <section class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+          <h2 class="text-3xl text-black font-bold text-center mb-12">Catégories populaires</h2>
+
+          <!-- Loading state -->
+          <div *ngIf="isCategoriesLoading" class="flex justify-center items-center py-10">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-indigo-600"></div>
+          </div>
+
+          <!-- Error state -->
+          <div *ngIf="categoriesError" class="text-center py-10">
+            <p class="text-red-500">{{ categoriesError }}</p>
+          </div>
+
+          <div *ngIf="!isCategoriesLoading && !categoriesError && categories.length > 0" class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div *ngFor="let category of categories" class="bg-gradient-to-br from-indigo-50 to-violet-50 p-6 rounded-xl shadow-md text-center hover:shadow-lg transition-shadow">
+              <h3 class="text-xl font-semibold text-indigo-700 mb-2">{{ category.name }}</h3>
+              <p *ngIf="category.description" class="text-gray-600 text-sm line-clamp-2">{{ category.description }}</p>
+              <a routerLink="/posts" [queryParams]="{category: category.name}" class="mt-4 inline-block text-indigo-600 hover:text-indigo-800 text-sm font-medium">
+                Explorer
+              </a>
+            </div>
+          </div>
+
+          <!-- No categories state -->
+          <div *ngIf="!isCategoriesLoading && !categoriesError && categories.length === 0" class="text-center py-10">
+            <p class="text-gray-500">Aucune catégorie disponible pour le moment.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer Section -->
+      <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-4">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <!-- Logo et description -->
+            <div class="col-span-1 md:col-span-1">
+              <div class="flex items-center mb-4">
+                <img src="../../../assets/images/logo2.png" alt="CoTrade Logo" class="h-10 w-10 mr-2">
+                <span class="text-xl font-bold">CoTrade</span>
+              </div>
+              <p class="text-gray-400 mb-4">
+                Échangez vos objets, réduisez le gaspillage et trouvez des trésors cachés.
+              </p>
+              <div class="flex space-x-4">
+                <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"/>
+                  </svg>
+                </a>
+                <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723 10.054 10.054 0 01-3.127 1.184 4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                  </svg>
+                </a>
+                <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z"/>
+                  </svg>
+                </a>
+              </div>
+            </div>
+
+            <!-- Liens rapides -->
+            <div>
+              <h3 class="text-lg font-semibold mb-4">Liens rapides</h3>
+              <ul class="space-y-2">
+                <li><a routerLink="/" class="text-gray-400 hover:text-white transition-colors">Accueil</a></li>
+                <li><a routerLink="/posts" class="text-gray-400 hover:text-white transition-colors">Objets</a></li>
+                <li><a routerLink="/about" class="text-gray-400 hover:text-white transition-colors">À propos</a></li>
+                <li><a routerLink="/contact" class="text-gray-400 hover:text-white transition-colors">Contact</a></li>
+              </ul>
+            </div>
+
+            <!-- Catégories -->
+            <div>
+              <h3 class="text-lg font-semibold mb-4">Catégories</h3>
+              <ul class="space-y-2">
+                <li *ngFor="let category of categories.slice(0, 5)">
+                  <a routerLink="/posts" [queryParams]="{category: category.name}" class="text-gray-400 hover:text-white transition-colors">
+                    {{ category.name }}
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Contact -->
+            <div>
+              <h3 class="text-lg font-semibold mb-4">Contact</h3>
+              <ul class="space-y-2 text-gray-400">
+                <li class="flex items-start">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>123 Rue de l'Échange, 75001 Paris</span>
+                </li>
+                <li class="flex items-start">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <span>yassinelouissi67Atgmail.com</span>
+                </li>
+                <li class="flex items-start">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  <span>+33 1 23 45 67 89</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400 text-sm">
+            <p>&copy; {{ currentYear }} CoTrade. Tous droits réservés.</p>
+          </div>
+        </div>
+      </footer>
     </main>
   `,
   styles: [
@@ -304,6 +412,13 @@ import { trigger, transition, style, animate, query, stagger } from "@angular/an
       }
       .overflow-x-auto::-webkit-scrollbar {
         display: none;
+      }
+
+      .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
       }
     `,
   ],
@@ -366,38 +481,71 @@ import { trigger, transition, style, animate, query, stagger } from "@angular/an
     ]),
   ],
 })
-export class HomeComponent {
-  testimonials = [
-    {
-      content: "J'ai trouvé des livres rares que je cherchais depuis longtemps. Une véritable mine d'or !",
-      author: "Marie Dubois",
-      role: "Collectionneuse",
-      image: "assets/images/testimonial-1.jpg",
-    },
-    {
-      content: "Grâce à coTrade, j'ai pu échanger mes anciens jeux vidéo contre des nouveaux. Génial !",
-      author: "Thomas Laurent",
-      role: "Gamer",
-      image: "assets/images/testimonial-2.jpg",
-    },
-    {
-      content: "Une communauté incroyable et des échanges très enrichissants. Je recommande !",
-      author: "Sophie Martin",
-      role: "Artiste",
-      image: "assets/images/testimonial-3.jpg",
-    },
-    {
-      content: "La meilleure plateforme pour donner une seconde vie à nos objets. Économique et écologique !",
-      author: "Pierre Girard",
-      role: "Écologiste",
-      image: "assets/images/testimonial-4.jpg",
-    },
-    {
-      content: "Interface intuitive et utilisateurs sérieux. Mes échanges se sont toujours bien passés.",
-      author: "Julie Moreau",
-      role: "Utilisatrice régulière",
-      image: "../../../assets/images/posts",
-    },
-  ]
+export class HomeComponent implements OnInit {
+  // Featured posts
+  featuredPosts: Post[] = []
+  isLoading = true
+  error: string | null = null
+
+  // Categories
+  categories: Category[] = []
+  isCategoriesLoading = true
+  categoriesError: string | null = null
+
+  currentYear = new Date().getFullYear()
+
+  constructor(
+    private postService: PostService,
+    private categoryService: CategoryService,
+    private userService: UserService,
+  ) {}
+
+  ngOnInit(): void {
+    this.loadFeaturedPosts()
+    this.loadCategories()
+  }
+
+  loadFeaturedPosts(): void {
+    this.isLoading = true
+    this.error = null
+
+    this.postService.getAllPosts().subscribe({
+      next: (posts) => {
+        // Filter active posts and take the first 4
+        this.featuredPosts = posts.filter((post) => post.status === "ACTIVE").slice(0, 4)
+        this.isLoading = false
+      },
+      error: (err) => {
+        console.error("Error loading featured posts:", err)
+        this.error = "Impossible de charger les objets en vedette. Veuillez réessayer plus tard."
+        this.isLoading = false
+      },
+    })
+  }
+
+  loadCategories(): void {
+    this.isCategoriesLoading = true
+    this.categoriesError = null
+
+    this.categoryService.getAllCategories().subscribe({
+      next: (categories) => {
+        // Take up to 8 categories
+        this.categories = categories.slice(0, 8)
+        this.isCategoriesLoading = false
+      },
+      error: (err) => {
+        console.error("Error loading categories:", err)
+        this.categoriesError = "Impossible de charger les catégories. Veuillez réessayer plus tard."
+        this.isCategoriesLoading = false
+      },
+    })
+  }
+
+  getPostImage(post: Post): string {
+    if (!post.photos || post.photos.length === 0) {
+      return "../../../assets/images/placeholder.jpg"
+    }
+    return "http://localhost:8445/" + post.photos[0].filePath
+  }
 }
 
