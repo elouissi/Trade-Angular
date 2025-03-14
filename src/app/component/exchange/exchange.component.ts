@@ -1,4 +1,4 @@
-import { Component, type OnInit, ViewChild, type ElementRef, type AfterViewChecked } from "@angular/core"
+import { Component,  OnInit, ViewChild,  ElementRef,  AfterViewChecked } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import {  ActivatedRoute, RouterModule } from "@angular/router"
 import { HeaderComponent } from "../header/header.component"
@@ -9,7 +9,7 @@ import  { Post } from "../../models/post/post.module"
 import  { MessageService } from "../../service/message/message.service"
 import  { PostService } from "../../service/post/post.service"
 import  { AuthService } from "../../service/auth/auth.service"
-import {ConversationService} from "../../service/Conversation/conversation.service";
+import  { ConversationService } from "../../service/Conversation/conversation.service"
 
 @Component({
   selector: "app-exchange",
@@ -144,12 +144,14 @@ import {ConversationService} from "../../service/Conversation/conversation.servi
                     </div>
                   </div>
 
-                  <!-- Messages -->
+                  <!-- Messages Container -->
                   <div class="flex-1 overflow-y-auto p-4 bg-gray-50" #messageContainer>
+                    <!-- Loading State -->
                     <div *ngIf="isLoading" class="flex justify-center items-center h-full">
                       <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600"></div>
                     </div>
 
+                    <!-- Empty State -->
                     <div *ngIf="!isLoading && messages.length === 0" class="flex flex-col items-center justify-center h-full text-gray-500">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -157,74 +159,27 @@ import {ConversationService} from "../../service/Conversation/conversation.servi
                       <p>Aucun message. Commencez la conversation !</p>
                     </div>
 
-                    <div *ngIf="!isLoading && messages.length > 0">
+
+                    <div *ngIf="!isLoading && messages.length > 0" [@staggerMessages]="messages.length">
+                      <!-- Messages Loop -->
                       <div *ngFor="let message of messages" class="mb-4">
-                        <div [class.justify-end]="message.senderId === currentUserId" class="flex">
-                          <!-- Sender avatar (only for received messages) -->
-                          <div *ngIf="message.senderId !== currentUserId" class="flex-shrink-0 mr-2 mt-1">
-                            <div class="h-8 w-8 rounded-full bg-gradient-to-r from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs">
-                              {{ getReceiverInitials() }}
-                            </div>
+                        <!-- Message sent by current user -->
+                        <div *ngIf="message.senderId === currentUserId" class="flex justify-end">
+                          <div class="bg-indigo-600 text-white px-4 py-2 rounded-lg rounded-tr-none shadow-sm">
+                            <p>{{ message.body }}</p>
+                            <span class="text-xs text-gray-300">{{ formatMessageTime(message.createdAt) }}</span>
                           </div>
+                        </div>
 
-                          <!-- Message bubble -->
-                          <div class="max-w-[75%]">
-                            <!-- Sender name (only for received messages) -->
-                            <div *ngIf="message.senderId !== currentUserId" class="text-xs text-gray-500 ml-1 mb-1">
-                              {{ receiver?.name || receiverName }}
-                            </div>
-
-                            <!-- Message content -->
-                            <div
-                              [class.bg-indigo-600]="message.senderId === currentUserId"
-                              [class.text-white]="message.senderId === currentUserId"
-                              [class.bg-white]="message.senderId !== currentUserId"
-                              [class.rounded-tr-lg]="message.senderId === currentUserId"
-                              [class.rounded-tl-lg]="message.senderId !== currentUserId"
-                              [class.rounded-bl-lg]="true"
-                              [class.rounded-br-lg]="true"
-                              class="px-4 py-2 shadow-sm"
-                            >
-                              <p class="text-sm whitespace-pre-wrap">{{ message.body }}</p>
-
-                              <!-- Attachment if any -->
-                              <a
-                                *ngIf="message.attachment"
-                                [href]="message.attachment"
-                                target="_blank"
-                                class="mt-2 flex items-center text-xs font-medium underline"
-                                [class.text-indigo-200]="message.senderId === currentUserId"
-                                [class.text-indigo-600]="message.senderId !== currentUserId"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                                </svg>
-                                Pièce jointe
-                              </a>
-                            </div>
-
-                            <!-- Message time -->
-                            <div
-                              [class.text-right]="message.senderId === currentUserId"
-                              class="text-xs text-gray-500 mt-1 px-1"
-                            >
-                              {{ formatMessageTime(message.createdAt) }}
-
-                              <!-- Read status for sent messages -->
-                              <span *ngIf="message.senderId === currentUserId" class="ml-1">
-                                <svg *ngIf="message.isRead" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline text-blue-500" viewBox="0 0 20 20" fill="currentColor">
-                                  <path d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L9 12.586l7.293-7.293a1 1 0 011.414 1.414l-8 8z" />
-                                </svg>
-                                <svg *ngIf="!message.isRead" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                                  <path d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L9 12.586l7.293-7.293a1 1 0 011.414 1.414l-8 8z" />
-                                </svg>
-                              </span>
-                            </div>
+                        <!-- Message received from other user -->
+                        <div *ngIf="message.senderId !== currentUserId" class="flex justify-start">
+                          <div class="bg-white px-4 py-2 rounded-lg rounded-tl-none shadow-sm border border-gray-100">
+                            <p class="text-black" >{{ message.body }}</p>
+                            <span class="text-xs text-gray-500">{{ formatMessageTime(message.createdAt) }}</span>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
+                    </div>                  </div>
 
                   <!-- Message Input -->
                   <div class="p-4 border-t border-gray-200">
@@ -341,60 +296,77 @@ export class ExchangeComponent implements OnInit, AfterViewChecked {
   ) {}
 
   ngOnInit(): void {
-    this.currentUserId = this.authService.getId() || "";
-    const role = this.authService.getRole();
+    // Récupérer l'ID de l'utilisateur connecté
+    this.currentUserId = this.authService.getId() || ""
+    const role = this.authService.getRole()
 
-    const id = this.route.snapshot.paramMap.get("id") || "";
-    const receiverId = this.route.snapshot.paramMap.get("receiverId");
+    const id = this.route.snapshot.paramMap.get("id") || ""
+    const receiverId = this.route.snapshot.paramMap.get("receiverId")
 
-    if (role === 'TRADER') {
+    if (role === "TRADER") {
       // TRADER consulte une conversation existante (ID est l'ID de la conversation)
-      this.conversationId = id;
-      this.loadMessagesFromConversation();
-    } else if (role === 'VISITOR') {
+      this.conversationId = id
+      this.loadMessagesFromConversation()
+    } else if (role === "VISITOR") {
       if (receiverId) {
         // VISITOR consulte une conversation existante (ID est l'ID de la conversation)
-        this.conversationId = id;
-        this.loadMessagesFromConversation();
+        this.conversationId = id
+        this.loadMessagesFromConversation()
       } else {
         // VISITOR crée une nouvelle conversation (ID est l'ID du post)
-        this.loadPost(id);
+        this.loadPost(id)
       }
     }
   }
 
+  ngAfterViewChecked() {}
+
   loadPost(postId: string): void {
     this.postService.getPostById(postId).subscribe({
       next: (post) => {
-        this.post = post;
-        this.postTitle = post.title;
-        this.receiverId = post.userId; // Le TRADER est le propriétaire du post
+        this.post = post
+        this.postTitle = post.title
+        this.receiverId = post.userId // Le TRADER est le propriétaire du post
+
+        // Charger les infos de l'utilisateur receveur
+        this.loadUserInfo(this.receiverId, "receiver")
 
         // Créer ou récupérer la conversation
-        this.findOrCreateConversation(postId);
+        this.findOrCreateConversation(postId)
       },
       error: (error) => {
-        console.error("Erreur lors du chargement du post:", error);
-        this.isLoading = false;
+        console.error("Erreur lors du chargement du post:", error)
+        this.isLoading = false
       },
-    });
+    })
+  }
+  getUserId(): string {
+    return this.authService.getId() || ""
   }
 
   loadMessagesFromConversation(): void {
     if (!this.conversationId) {
-      console.error("No conversation ID available");
+      console.error("Aucun ID de conversation disponible");
       this.isLoading = false;
       return;
     }
 
     this.conversationService.getConversationById(this.conversationId).subscribe({
       next: (conversation) => {
+        // Si on a besoin de mettre à jour receiverId
+        if (conversation.senderId && conversation.receiverId) {
+          this.receiverId =
+            conversation.senderId === this.currentUserId ? conversation.receiverId : conversation.senderId;
+
+          // Charger les infos de l'utilisateur receveur
+          this.loadUserInfo(this.receiverId, "receiver");
+        }
+
         // Charger les messages de la conversation
-        this.messageService.getMessagesByConversation(this.conversationId).subscribe({
+        this.messageService.getMessagesByConversation(this.conversationId, this.currentUserId).subscribe({
           next: (messages) => {
             this.messages = messages;
             this.isLoading = false;
-            this.scrollToBottom();
 
             // Marquer les messages non lus comme lus
             this.markUnreadMessagesAsRead(messages);
@@ -405,7 +377,7 @@ export class ExchangeComponent implements OnInit, AfterViewChecked {
           },
         });
 
-        // Charger les détails du post associé à la conversation (si nécessaire)
+        // Charger les détails du post associé à la conversation
         if (conversation.postId) {
           this.postService.getPostById(conversation.postId).subscribe({
             next: (post) => {
@@ -423,10 +395,7 @@ export class ExchangeComponent implements OnInit, AfterViewChecked {
         this.isLoading = false;
       },
     });
-  }  ngAfterViewChecked() {
-    this.scrollToBottom()
   }
-
   loadUserInfo(userId: string, userType: "sender" | "receiver"): void {
     this.messageService.getUser(userId).subscribe({
       next: (user) => {
@@ -443,54 +412,24 @@ export class ExchangeComponent implements OnInit, AfterViewChecked {
     })
   }
 
-
-
-
-  loadMessages(): void {
-    if (!this.currentUserId || !this.receiverId) {
-      this.isLoading = false;
-      return;
-    }
-
-    // Si nous avons un post, utiliser la méthode findOrCreateConversation
-    if (this.post?.id) {
-      this.findOrCreateConversation(this.post.id);
-      return;
-    }
-
-    // Sinon, charger les messages directement entre les utilisateurs
-    this.messageService.getMessagesBetweenUsers(this.currentUserId, this.receiverId).subscribe({
-      next: (messages) => {
-        this.messages = messages;
-        this.isLoading = false;
-        this.scrollToBottom();
-
-        // Marquer les messages non lus comme lus
-        this.markUnreadMessagesAsRead(messages);
-      },
-      error: (error) => {
-        console.error("Erreur lors du chargement des messages:", error);
-        this.isLoading = false;
-      },
-    });
-  }
   findOrCreateConversation(postId: string): void {
     if (!this.currentUserId || !this.receiverId) {
-      this.isLoading = false;
-      return;
+      this.isLoading = false
+      return
     }
 
     this.conversationService.getOrCreateConversation(this.currentUserId, this.receiverId, postId).subscribe({
       next: (conversation) => {
-        this.conversationId = conversation.id || "";
-        this.loadMessagesFromConversation();
+        this.conversationId = conversation.id || ""
+        this.loadMessagesFromConversation()
       },
       error: (error) => {
-        console.error("Erreur lors de la récupération/création de la conversation:", error);
-        this.isLoading = false;
+        console.error("Erreur lors de la récupération/création de la conversation:", error)
+        this.isLoading = false
       },
-    });
+    })
   }
+
   markUnreadMessagesAsRead(messages: Message[]): void {
     // Trouver les messages non lus envoyés par l'autre utilisateur
     const unreadMessages = messages.filter((m) => !m.isRead && m.senderId !== this.currentUserId)
@@ -511,53 +450,43 @@ export class ExchangeComponent implements OnInit, AfterViewChecked {
   }
 
   sendMessage(event: Event): void {
-    event.preventDefault()
+    event.preventDefault();
 
-    if (!this.newMessage.trim() || !this.conversationId) return
+    if (!this.newMessage.trim() || !this.conversationId) return;
 
     const message: Message = {
       body: this.newMessage,
       isRead: false,
       conversationId: this.conversationId,
-    }
-
-    // Optimistic UI update
-    const tempMessage = {
-      ...message,
+      senderId: this.currentUserId, // L'utilisateur actuel est l'expéditeur
+      receiverId: this.receiverId,  // Le destinataire est l'autre utilisateur
       createdAt: new Date(),
-      senderId: this.currentUserId,
-      receiverId: this.receiverId,
-    }
+    };
 
-    this.messages.push(tempMessage)
+    // Optimistic UI update - ajouter le message temporairement
+    const tempMessage = { ...message };
+    this.messages.push(tempMessage);
+    this.newMessage = "";
 
-    // Mettre à jour les groupes de messages
-    this.groupMessagesByDate(this.messages)
-
-    this.newMessage = ""
-    this.scrollToBottom()
-
+    // Envoyer le message au serveur
     this.messageService.sendMessage(message).subscribe({
       next: (sentMessage) => {
-        // Replace the temp message with the actual one from the server
-        const index = this.messages.indexOf(tempMessage)
+        // Remplacer le message temporaire par celui du serveur
+        const index = this.messages.indexOf(tempMessage);
         if (index !== -1) {
-          this.messages[index] = sentMessage
-          this.groupMessagesByDate(this.messages)
+          this.messages[index] = sentMessage;
         }
       },
       error: (error) => {
-        console.error("Erreur lors de l'envoi du message:", error)
-        // Remove the temp message on error
-        const index = this.messages.indexOf(tempMessage)
+        console.error("Erreur lors de l'envoi du message:", error);
+        // Supprimer le message temporaire en cas d'erreur
+        const index = this.messages.indexOf(tempMessage);
         if (index !== -1) {
-          this.messages.splice(index, 1)
-          this.groupMessagesByDate(this.messages)
+          this.messages.splice(index, 1);
         }
       },
-    })
+    });
   }
-
   getPostImage(): string {
     if (!this.post || !this.post.photos || this.post.photos.length === 0) {
       return "/assets/placeholder.jpg"
@@ -592,48 +521,11 @@ export class ExchangeComponent implements OnInit, AfterViewChecked {
       return `Hier, ${messageDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
     }
 
-    // Sinon, afficher l'heure uniquement
-    return messageDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-  }
-
-  scrollToBottom(): void {
-    try {
-      if (this.messageContainer) {
-        const element = this.messageContainer.nativeElement
-        element.scrollTop = element.scrollHeight
-      }
-    } catch (err) {
-      console.error("Erreur lors du défilement vers le bas:", err)
-    }
-  }
-
-  groupMessagesByDate(messages: Message[]): void {
-    this.groupedMessages = new Map()
-
-    messages.forEach((message) => {
-      if (!message.createdAt) return
-
-      const date = new Date(message.createdAt)
-      const dateKey = date.toISOString().split("T")[0] // Format YYYY-MM-DD
-
-      if (!this.groupedMessages.has(dateKey)) {
-        this.groupedMessages.set(dateKey, [])
-      }
-
-      const group = this.groupedMessages.get(dateKey)
-      if (group) {
-        group.push(message)
-      }
-    })
-
-    // Trier les messages dans chaque groupe par date
-    this.groupedMessages.forEach((messagesGroup) => {
-      messagesGroup.sort((a, b) => {
-        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0
-        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0
-        return dateA - dateB
-      })
-    })
+    // Sinon, afficher la date et l'heure
+    return `${messageDate.toLocaleDateString()} ${messageDate.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`
   }
 }
 

@@ -71,8 +71,8 @@ export class MessageService {
   }
 
   // Récupérer les messages d'une conversation
-  getMessagesByConversation(conversationId: string): Observable<Message[]> {
-    return this.http.get<Message[]>(`${this.apiUrl}/messages/conversation/${conversationId}`).pipe(
+  getMessagesByConversation(conversationId: string,userId:string): Observable<Message[]> {
+    return this.http.get<Message[]>(`${this.apiUrl}/messages/conversation/${conversationId}/${userId}`).pipe(
       tap((messages) => console.log("Messages de la conversation récupérés:", messages)),
       catchError((error) => {
         console.error("Erreur lors de la récupération des messages de la conversation:", error)
