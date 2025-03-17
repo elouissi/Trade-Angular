@@ -3,6 +3,7 @@ import { HttpClient } from "@angular/common/http";
 import { Observable, of, throwError } from "rxjs";
 import { catchError, tap } from "rxjs/operators";
 import {PasswordChange, User} from "../../models/user/user.module";
+import {Post} from "../../models/post/post.module";
 
 @Injectable({
   providedIn: "root",
@@ -62,5 +63,9 @@ export class UserService {
         return throwError(() => error);
       })
     );
+  }
+
+  getAllUsers(): Observable<User[]> {
+    return this.http.get<User[]>(this.apiUrl)
   }
 }

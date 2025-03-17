@@ -3,6 +3,7 @@ import {HttpClient} from "@angular/common/http"
 import {Observable, throwError, of} from "rxjs"
 import {catchError, tap, switchMap} from "rxjs/operators"
 import {Conversation, ConversationDTO} from "../../models/conversation/conversation.module";
+import {Post} from "../../models/post/post.module";
 
 @Injectable({
   providedIn: "root",
@@ -84,5 +85,10 @@ export class ConversationService {
         return throwError(() => error);
       })
     );
-  }}
+  }
+
+  getAllConversations(): Observable<Conversation[]> {
+    return this.http.get<Conversation[]>(this.apiUrl)
+  }
+}
 

@@ -308,6 +308,8 @@ export class PostListComponent implements OnInit {
     })
   }
 
+
+
   filterPosts() {
     this.filteredPosts = this.posts.filter((post) => {
       const matchesSearch =

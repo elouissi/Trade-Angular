@@ -9,6 +9,7 @@ import  { AuthService } from "../../../service/auth/auth.service"
 import  { PostService } from "../../../service/post/post.service"
 import {ConversationDTO} from "../../../models/conversation/conversation.module";
 import {ConversationService} from "../../../service/Conversation/conversation.service";
+import {Post} from "../../../models/post/post.module";
 
 
 @Component({
@@ -97,7 +98,7 @@ import {ConversationService} from "../../../service/Conversation/conversation.se
                     <!-- User avatar or post image -->
                     <div class="flex-shrink-0 mr-4">
                       <div *ngIf="conversation.postImage" class="h-16 w-16 rounded-lg overflow-hidden">
-                        <img [src]="conversation.postImage" [alt]="conversation.postTitle" class="h-full w-full object-cover" />
+                        <img [src]="'http://localhost:8445/' + conversation.postImage" [alt]="conversation.postTitle" class="h-full w-full object-cover" />
                       </div>
                       <div *ngIf="!conversation.postImage" class="h-12 w-12 rounded-full bg-gradient-to-r from-indigo-500 to-violet-600 flex items-center justify-center text-white">
                         {{ getUserInitials(conversation.senderId === currentUserId ? conversation.receiverName || 'Utilisateur' : conversation.senderName || 'Utilisateur') }}
@@ -211,6 +212,8 @@ export class ExchangesListComponent implements OnInit {
     private postService: PostService,
     private conversationService: ConversationService,
   ) {}
+  selectedPhotoIndices: Map<string, number> = new Map()
+
 
   ngOnInit(): void {
     this.currentUserId = this.authService.getId() || ""
@@ -263,6 +266,10 @@ export class ExchangesListComponent implements OnInit {
       .join("")
       .substring(0, 2)
   }
+  getSelectedPhotoIndex(post: Post): number {
+    return post.id ? this.selectedPhotoIndices.get(post.id) || 0 : 0
+  }
+
 
   formatMessageTime(date: Date | undefined): string {
     if (!date) return ""
@@ -291,6 +298,15 @@ export class ExchangesListComponent implements OnInit {
     // Sinon, afficher la date
     return messageDate.toLocaleDateString()
   }
+  getMainPhotoUrl(post: Post): string {
+    if (!post.photos || post.photos.length === 0) {
+      return "/assets/placeholder.jpg"
+    }
+
+    const selectedIndex = this.getSelectedPhotoIndex(post)
+    return "http://localhost:8445/" + post.photos[selectedIndex].filePath
+  }
+
 
   loadPostDetails(postId: string, conversation: ConversationDTO): void {
     if (!postId) {
