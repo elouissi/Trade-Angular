@@ -6,6 +6,7 @@ import {  Post, PostStatus } from "../../../../models/post/post.module"
 import  { PostService } from "../../../../service/post/post.service"
 import  { CategoryService } from "../../../../service/category/category.service"
 import  { Category } from "../../../../models/category/category.module"
+import {AuthService} from "../../../../service/auth/auth.service";
 
 @Component({
   selector: "app-post-list",
@@ -275,11 +276,16 @@ export class PostListComponent implements OnInit {
   constructor(
     private postService: PostService,
     private categoryService: CategoryService,
+    private authService: AuthService,
   ) {}
 
   ngOnInit() {
     this.loadCategories()
-    this.loadPosts()
+    if (this.authService.isRole("ADMIN")){
+      this.loadPosts()
+    }else {
+      this.loadPostsByCreated()
+    }
   }
 
   loadCategories() {
@@ -296,6 +302,20 @@ export class PostListComponent implements OnInit {
 
   loadPosts() {
     this.postService.getAllPosts().subscribe((posts) => {
+      this.posts = posts
+      this.filterPosts()
+
+      // Initialiser les indices de photos sélectionnées
+      this.posts.forEach((post) => {
+        if (post.id) {
+          this.selectedPhotoIndices.set(post.id, 0)
+        }
+      })
+    })
+  }
+
+  loadPostsByCreated() {
+    this.postService.getAllPostsByCreated(this.authService.getId()).subscribe((posts) => {
       this.posts = posts
       this.filterPosts()
 

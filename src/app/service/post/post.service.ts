@@ -2,6 +2,7 @@ import { Injectable } from "@angular/core"
 import  { HttpClient } from "@angular/common/http"
 import type { Observable } from "rxjs"
 import {Post} from "../../models/post/post.module";
+import {AuthService} from "../auth/auth.service";
 
 @Injectable({
   providedIn: "root",
@@ -9,11 +10,15 @@ import {Post} from "../../models/post/post.module";
 export class PostService {
   private apiUrl = "http://localhost:8445/api/V1/posts"
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private authService: AuthService) {}
 
   getAllPosts(): Observable<Post[]> {
-    return this.http.get<Post[]>(this.apiUrl)
+      return this.http.get<Post[]>(this.apiUrl)
   }
+  getAllPostsByCreated(Id:string | null): Observable<Post[]> {
+    return this.http.get<Post[]>(`${this.apiUrl}/created/${Id}`)
+  }
+
 
   getPostById(id: string): Observable<Post> {
     return this.http.get<Post>(`${this.apiUrl}/${id}`)

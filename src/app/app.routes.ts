@@ -19,22 +19,28 @@ import {authGuard} from "./guard/auth.guard";
 import {adminGuard} from "./guard/admin.guard";
 import {traderGuard} from "./guard/trader.guard";
 import {StatsComponent} from "./component/dashboard/stats/stats.component";
+import {ConversationsListComponent} from "./component/dashboard/conversations-list/conversations-list.component";
+import {UsersListComponent} from "./component/dashboard/users-list/users-list.component";
+import {EmptyComponent} from "./guard/dashboard-redirect-guard.guard";
 
 export const routes: Routes = [
   {
     path: "dashboard",
     component: DashboardComponent,
-    canActivate:[authGuard],
+    canActivate: [authGuard],
     children: [
-      { path: "stats", component: StatsComponent ,canActivate:[adminGuard] },
+      { path: "stats", component: StatsComponent, canActivate: [adminGuard] },
+      { path: "conversations", component: ConversationsListComponent },
+      { path: "users", component: UsersListComponent,canActivate: [adminGuard]  },
       { path: "posts", component: PostListComponent },
-      { path: "posts/new", component: PostFormComponent },
-      { path: "posts/edit/:id", component: PostFormComponent },
+      { path: "posts/new", component: PostFormComponent ,canActivate: [traderGuard] },
+      { path: "posts/edit/:id", component: PostFormComponent,canActivate: [traderGuard]  },
       { path: "posts/:id", component: PostDetailComponent },
-      { path: "categories", component: CategoryListComponent,canActivate:[adminGuard] },
-      { path: "categories/new", component: CategoryFormComponent,canActivate:[adminGuard] },
-      { path: "categories/edit/:id", component: CategoryFormComponent,canActivate:[adminGuard] },
-      { path: "", redirectTo: "stats", pathMatch: "full" },
+      { path: "categories", component: CategoryListComponent, canActivate: [adminGuard] },
+      { path: "categories/new", component: CategoryFormComponent, canActivate: [adminGuard] },
+      { path: "categories/edit/:id", component: CategoryFormComponent, canActivate: [adminGuard] },
+
+      { path: "", pathMatch: "full",component: EmptyComponent },
     ],
   },
   { path: "details/:id", component: PostDetailComponent },
