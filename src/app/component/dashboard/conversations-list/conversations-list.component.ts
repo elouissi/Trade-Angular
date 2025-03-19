@@ -2,17 +2,8 @@ import { Component, type OnInit } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { RouterModule } from "@angular/router"
 import { FormsModule } from "@angular/forms"
-import  { ConversationService } from "../../../service/Conversation/conversation.service"
-import {ConversationDTO} from "../../../models/conversation/conversation.module";
-
-interface Conversation {
-  id?: string
-  participants: string[]
-  lastMessage?: string
-  lastMessageDate?: Date
-  unreadCount?: number
-  isActive?: boolean
-}
+import { ConversationService } from "../../../service/Conversation/conversation.service"
+import { ConversationDTO } from "../../../models/conversation/conversation.module"
 
 @Component({
   selector: "app-conversations-list",
@@ -23,10 +14,7 @@ interface Conversation {
       <!-- Header avec actions -->
       <div class="mb-6 flex justify-between items-center">
         <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Conversations</h2>
-        <a routerLink="/dashboard/conversations/new"
-           class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors">
-          Nouvelle conversation
-        </a>
+
       </div>
 
       <!-- Filtres -->
@@ -36,7 +24,7 @@ interface Conversation {
             type="text"
             [(ngModel)]="searchTerm"
             (ngModelChange)="filterConversations()"
-            placeholder="Rechercher..."
+            placeholder="Rechercher par nom, message ou titre..."
             class="block w-full px-4 py-2 text-gray-900 dark:text-white bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
           <div *ngIf="searchTerm" class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer" (click)="clearSearch()">
@@ -53,41 +41,52 @@ interface Conversation {
           <li *ngFor="let conversation of filteredConversations"
               class="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
               [routerLink]="['/dashboard/conversations', conversation.id]">
-            <div class="px-4 py-4 sm:px-6 flex items-center justify-between">
-              <div class="flex items-center">
-                <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600 dark:text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="px-4 py-4 sm:px-6 flex items-start justify-between">
+              <!-- Partie gauche avec image et infos principales -->
+              <div class="flex items-start">
+                <!-- Image du post si disponible, sinon icône de conversation -->
+                <div *ngIf="conversation.postImage" class="flex-shrink-0 h-14 w-14 rounded-lg overflow-hidden">
+                  <img [src]="'http://localhost:8445/'+conversation.postImage" alt="Post image" class="h-full w-full object-cover" />
+                </div>
+                <div *ngIf="!conversation.postImage" class="flex-shrink-0 h-14 w-14 flex items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-900">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600 dark:text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                 </div>
+
+                <!-- Infos principales -->
                 <div class="ml-4">
-                  <div class="flex items-center">
-                    <div class="text-sm font-medium text-indigo-600 dark:text-indigo-400">
-                      {{ formatParticipants(conversation.participants) }}
+                  <!-- Titre du post -->
+                  <div class="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                    {{ conversation.postTitle || 'Sans titre' }}
+                  </div>
+
+                  <!-- Participants -->
+                  <div class="flex items-center mb-1">
+                    <div class="text-sm text-indigo-600 dark:text-indigo-400 font-medium">
+                      De: {{ conversation.senderName || 'Inconnu' }}
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    <div class="text-sm text-indigo-600 dark:text-indigo-400 font-medium">
+                      À: {{ conversation.receiverName || 'Inconnu' }}
                     </div>
                     <div *ngIf="conversation.unreadCount && conversation.unreadCount > 0"
                          class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300">
                       {{ conversation.unreadCount }}
                     </div>
                   </div>
-                  <div class="text-sm text-gray-500 dark:text-gray-400 truncate">
+
+                  <!-- Dernier message -->
+                  <div class="text-sm text-gray-500 dark:text-gray-400 max-w-md truncate">
                     {{ conversation.lastMessage || 'Pas de message' }}
                   </div>
                 </div>
               </div>
-              <div class="flex items-center">
-                <div class="text-xs text-gray-500 dark:text-gray-400">
-                  {{ formatDate(conversation.lastMessageDate) }}
-                </div>
-                <div class="ml-4 flex space-x-2">
-                  <button (click)="deleteConversation(conversation, $event)"
-                          class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
+
+              <!-- Partie droite avec date et actions -->
+
             </div>
           </li>
         </ul>
@@ -106,7 +105,7 @@ interface Conversation {
 })
 export class ConversationsListComponent implements OnInit {
   conversations: ConversationDTO[] = []
-  filteredConversations: Conversation[] = []
+  filteredConversations: ConversationDTO[] = []
   searchTerm = ""
 
   constructor(private conversationService: ConversationService) {}
@@ -119,34 +118,30 @@ export class ConversationsListComponent implements OnInit {
     this.conversationService.getAllConversations().subscribe({
       next: (conversations) => {
         this.conversations = conversations
-        this.filterConversations()
+        this.filteredConversations = [...conversations]
+        console.log('Conversations chargées:', this.conversations)
       },
       error: (error) => {
         console.error("Error loading conversations:", error)
-        // Données de test en cas d'erreur
-        this.conversations = [
-
-        ]
-        this.filterConversations()
       },
     })
   }
 
   filterConversations() {
     if (!this.searchTerm) {
-      // this.filteredConversations = [...this.conversations]
+      this.filteredConversations = [...this.conversations]
       return
     }
 
     const search = this.searchTerm.toLowerCase()
-    // this.filteredConversations = this.conversations.filter((conversation) => {
-    //   const participantsMatch = conversation.participants.some((participant) =>
-    //     participant.toLowerCase().includes(search),
-    //   )
-    //   const messageMatch = conversation.lastMessage?.toLowerCase().includes(search)
-    //
-    //   return participantsMatch || messageMatch
-    // })
+    this.filteredConversations = this.conversations.filter((conversation) => {
+      const senderMatch = conversation.senderName?.toLowerCase().includes(search);
+      const receiverMatch = conversation.receiverName?.toLowerCase().includes(search);
+      const messageMatch = conversation.lastMessage?.toLowerCase().includes(search);
+      const postMatch = conversation.postTitle?.toLowerCase().includes(search);
+
+      return senderMatch || receiverMatch || messageMatch || postMatch;
+    })
   }
 
   clearSearch() {
@@ -154,16 +149,10 @@ export class ConversationsListComponent implements OnInit {
     this.filterConversations()
   }
 
-  formatParticipants(participants: string[]): string {
-    if (participants.length <= 2) {
-      return participants.join(", ")
-    }
-    return `${participants[0]}, ${participants[1]} et ${participants.length - 2} autres`
-  }
+  formatDate(dateString?: string | null): string {
+    if (!dateString) return ""
 
-  formatDate(date?: Date): string {
-    if (!date) return ""
-
+    const date = new Date(dateString)
     const now = new Date()
     const diff = now.getTime() - date.getTime()
     const day = 24 * 60 * 60 * 1000
@@ -178,18 +167,4 @@ export class ConversationsListComponent implements OnInit {
     }
   }
 
-  deleteConversation(conversation: Conversation, event: Event) {
-    event.stopPropagation()
-    if (confirm(`Êtes-vous sûr de vouloir supprimer cette conversation ?`)) {
-      this.conversationService.deleteConversation(conversation.id!).subscribe({
-        next: () => {
-          this.loadConversations()
-        },
-        error: (error) => {
-          console.error("Error deleting conversation:", error)
-        },
-      })
-    }
-  }
 }
-
