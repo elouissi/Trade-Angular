@@ -1,7 +1,7 @@
 import { Component,  OnInit, ViewChild,  ElementRef,  AfterViewChecked } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import {  ActivatedRoute, RouterModule } from "@angular/router"
-import { HeaderComponent } from "../header/header.component"
+import { HeaderComponent } from "../layouts/header/header.component"
 import { FormsModule } from "@angular/forms"
 import { trigger, transition, style, animate, query, stagger } from "@angular/animations"
 import  { Message, User } from "../../models/message/message.module"
@@ -38,14 +38,11 @@ import  { ConversationService } from "../../service/Conversation/conversation.se
         </div>
       </section>
 
-      <!-- Exchange Section -->
       <section class="py-12 bg-white">
         <div class="container mx-auto px-4">
           <div class="max-w-5xl mx-auto">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <!-- Left Sidebar with Post and User Info -->
               <div class="lg:col-span-1">
-                <!-- Post Info Card -->
                 <div *ngIf="post" class="bg-white rounded-xl shadow-lg overflow-hidden mb-6" [@fadeIn]>
                   <div class="relative h-48">
                     <img
@@ -281,9 +278,8 @@ export class ExchangeComponent implements OnInit, AfterViewChecked {
   currentUserId = ""
   receiverId = ""
   conversationId = ""
-  isOnline = Math.random() > 0.5 // Simuler l'état en ligne aléatoirement
+  isOnline = Math.random() > 0.5
 
-  // Informations utilisateur
   receiver: User | null = null
   sender: User | null = null
 
@@ -296,7 +292,6 @@ export class ExchangeComponent implements OnInit, AfterViewChecked {
   ) {}
 
   ngOnInit(): void {
-    // Récupérer l'ID de l'utilisateur connecté
     this.currentUserId = this.authService.getId() || ""
     const role = this.authService.getRole()
 
@@ -304,16 +299,13 @@ export class ExchangeComponent implements OnInit, AfterViewChecked {
     const receiverId = this.route.snapshot.paramMap.get("receiverId")
 
     if (role === "TRADER") {
-      // TRADER consulte une conversation existante (ID est l'ID de la conversation)
       this.conversationId = id
       this.loadMessagesFromConversation()
     } else if (role === "VISITOR") {
       if (receiverId) {
-        // VISITOR consulte une conversation existante (ID est l'ID de la conversation)
         this.conversationId = id
         this.loadMessagesFromConversation()
       } else {
-        // VISITOR crée une nouvelle conversation (ID est l'ID du post)
         this.loadPost(id)
       }
     }
@@ -326,12 +318,10 @@ export class ExchangeComponent implements OnInit, AfterViewChecked {
       next: (post) => {
         this.post = post
         this.postTitle = post.title
-        this.receiverId = post.userId // Le TRADER est le propriétaire du post
+        this.receiverId = post.userId
 
-        // Charger les infos de l'utilisateur receveur
         this.loadUserInfo(this.receiverId, "receiver")
 
-        // Créer ou récupérer la conversation
         this.findOrCreateConversation(postId)
       },
       error: (error) => {
@@ -353,22 +343,17 @@ export class ExchangeComponent implements OnInit, AfterViewChecked {
 
     this.conversationService.getConversationById(this.conversationId).subscribe({
       next: (conversation) => {
-        // Si on a besoin de mettre à jour receiverId
         if (conversation.senderId && conversation.receiverId) {
           this.receiverId =
             conversation.senderId === this.currentUserId ? conversation.receiverId : conversation.senderId;
 
-          // Charger les infos de l'utilisateur receveur
           this.loadUserInfo(this.receiverId, "receiver");
         }
-
-        // Charger les messages de la conversation
         this.messageService.getMessagesByConversation(this.conversationId, this.currentUserId).subscribe({
           next: (messages) => {
             this.messages = messages;
             this.isLoading = false;
 
-            // Marquer les messages non lus comme lus
             this.markUnreadMessagesAsRead(messages);
           },
           error: (error) => {
@@ -431,10 +416,7 @@ export class ExchangeComponent implements OnInit, AfterViewChecked {
   }
 
   markUnreadMessagesAsRead(messages: Message[]): void {
-    // Trouver les messages non lus envoyés par l'autre utilisateur
     const unreadMessages = messages.filter((m) => !m.isRead && m.senderId !== this.currentUserId)
-
-    // Marquer chaque message non lu comme lu
     unreadMessages.forEach((message) => {
       if (message.id) {
         this.messageService.markAsRead(message.id).subscribe({
@@ -463,15 +445,11 @@ export class ExchangeComponent implements OnInit, AfterViewChecked {
       createdAt: new Date(),
     };
 
-    // Optimistic UI update - ajouter le message temporairement
     const tempMessage = { ...message };
     this.messages.push(tempMessage);
     this.newMessage = "";
-
-    // Envoyer le message au serveur
     this.messageService.sendMessage(message).subscribe({
       next: (sentMessage) => {
-        // Remplacer le message temporaire par celui du serveur
         const index = this.messages.indexOf(tempMessage);
         if (index !== -1) {
           this.messages[index] = sentMessage;
@@ -479,7 +457,6 @@ export class ExchangeComponent implements OnInit, AfterViewChecked {
       },
       error: (error) => {
         console.error("Erreur lors de l'envoi du message:", error);
-        // Supprimer le message temporaire en cas d'erreur
         const index = this.messages.indexOf(tempMessage);
         if (index !== -1) {
           this.messages.splice(index, 1);
@@ -509,19 +486,16 @@ export class ExchangeComponent implements OnInit, AfterViewChecked {
     const messageDate = new Date(date)
     const now = new Date()
 
-    // Si c'est aujourd'hui, afficher l'heure
     if (messageDate.toDateString() === now.toDateString()) {
       return messageDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     }
 
-    // Si c'est hier
     const yesterday = new Date(now)
     yesterday.setDate(now.getDate() - 1)
     if (messageDate.toDateString() === yesterday.toDateString()) {
       return `Hier, ${messageDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
     }
 
-    // Sinon, afficher la date et l'heure
     return `${messageDate.toLocaleDateString()} ${messageDate.toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",

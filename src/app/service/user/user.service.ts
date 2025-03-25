@@ -13,7 +13,6 @@ export class UserService {
 
   constructor(private http: HttpClient) {}
 
-  // Récupérer le profil de l'utilisateur actuel
   getUserProfile(): Observable<User> {
     return this.http.get<User>(`${this.apiUrl}/profile`).pipe(
       tap(user => console.log('Profil utilisateur récupéré', user)),
@@ -33,12 +32,24 @@ export class UserService {
     );
   }
 
-  // Mettre à jour le profil de l'utilisateur
-  updateUserProfile(user: User): Observable<User> {
+    updateUserProfile(user: User): Observable<User> {
     return this.http.put<User>(`${this.apiUrl}/profile`, user).pipe(
       tap(updatedUser => console.log('Profil utilisateur mis à jour', updatedUser)),
       catchError(error => {
         console.error('Erreur lors de la mise à jour du profil', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  toTrader(id: string | null): Observable<string> {
+    if (!id) {
+      return throwError(() => new Error('Invalid ID: ID cannot be null'));
+    }
+
+    return this.http.put<string>(`${this.apiUrl}/toTrader/${id}`, {}).pipe(
+      catchError(error => {
+        console.error('Error updating trader profile', error);
         return throwError(() => error);
       })
     );
@@ -54,7 +65,6 @@ export class UserService {
     );
   }
 
-  // Supprimer le compte utilisateur
   deleteAccount(): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/profile`).pipe(
       tap(response => console.log('Compte supprimé avec succès', response)),

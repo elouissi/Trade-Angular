@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { trigger, transition, style, animate, keyframes } from '@angular/animations';
-import { HeaderComponent } from "../../component/header/header.component";
+import { HeaderComponent } from "../../component/layouts/header/header.component";
 import Swal from 'sweetalert2';
 import {AuthService} from "../../service/auth/auth.service";
 
@@ -147,7 +147,6 @@ export class LoginComponent {
             showConfirmButton: false
           });
 
-          // Redirect after successful login
           setTimeout(() => {
             this.router.navigate(['/dashboard']);
           }, 2000);
@@ -164,7 +163,6 @@ export class LoginComponent {
         }
       });
     } else {
-      // Mark all fields as touched to trigger validation messages
       Object.keys(this.loginForm.controls).forEach(field => {
         const control = this.loginForm.get(field);
         control?.markAsTouched({ onlySelf: true });

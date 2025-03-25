@@ -11,13 +11,11 @@ import { ConversationDTO } from "../../../models/conversation/conversation.modul
   imports: [CommonModule, RouterModule, FormsModule],
   template: `
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      <!-- Header avec actions -->
       <div class="mb-6 flex justify-between items-center">
         <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Conversations</h2>
 
       </div>
 
-      <!-- Filtres -->
       <div class="mb-6">
         <div class="relative">
           <input
@@ -34,17 +32,13 @@ import { ConversationDTO } from "../../../models/conversation/conversation.modul
           </div>
         </div>
       </div>
-
-      <!-- Liste des conversations -->
       <div class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-md">
         <ul class="divide-y divide-gray-200 dark:divide-gray-700">
           <li *ngFor="let conversation of filteredConversations"
               class="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
               [routerLink]="['/dashboard/conversations', conversation.id]">
             <div class="px-4 py-4 sm:px-6 flex items-start justify-between">
-              <!-- Partie gauche avec image et infos principales -->
               <div class="flex items-start">
-                <!-- Image du post si disponible, sinon icône de conversation -->
                 <div *ngIf="conversation.postImage" class="flex-shrink-0 h-14 w-14 rounded-lg overflow-hidden">
                   <img [src]="'http://localhost:8445/'+conversation.postImage" alt="Post image" class="h-full w-full object-cover" />
                 </div>

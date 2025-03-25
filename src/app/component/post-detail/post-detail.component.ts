@@ -3,7 +3,7 @@ import { CommonModule } from "@angular/common"
 import {  ActivatedRoute, RouterModule } from "@angular/router"
 import { trigger, transition, style, animate } from "@angular/animations"
 import { FormsModule } from "@angular/forms"
-import {HeaderComponent} from "../header/header.component";
+import {HeaderComponent} from "../layouts/header/header.component";
 import {Post, PostStatus} from "../../models/post/post.module";
 import {PostService} from "../../service/post/post.service";
 import {AuthService} from "../../service/auth/auth.service";
@@ -130,7 +130,7 @@ import {AuthService} from "../../service/auth/auth.service";
                   <!-- Action Buttons -->
                   <div class="flex flex-wrap gap-4 mt-6">
                     <a
-                      *ngIf="isAuthenticated() && !isOwner()"
+                      *ngIf="isAuthenticated() && !isOwner() && !this.authService.isRole('ADMIN')"
                       [routerLink]="['/exchanges', post.id]"
                       class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-700 text-white rounded-lg font-medium hover:from-indigo-700 hover:to-violet-800 transition-all hover:shadow-lg flex items-center">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -277,7 +277,7 @@ import {AuthService} from "../../service/auth/auth.service";
     ]),
   ],
 })
-export class PostDetailComponent implements OnInit {
+export class PostSingleComponent implements OnInit {
   post: Post | null = null
   similarPosts: Post[] = []
   isLoading = true
@@ -287,7 +287,7 @@ export class PostDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private postService: PostService,
-    private authService: AuthService,
+    protected authService: AuthService,
   ) {}
 
   ngOnInit(): void {

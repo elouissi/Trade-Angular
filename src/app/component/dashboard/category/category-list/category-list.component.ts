@@ -21,7 +21,6 @@ import {Category} from "../../../../models/category/category.module";
         </a>
       </div>
 
-      <!-- Filtres -->
       <div class="mb-6">
         <div class="relative">
           <input
@@ -39,7 +38,6 @@ import {Category} from "../../../../models/category/category.module";
         </div>
       </div>
 
-      <!-- Liste des catégories -->
       <div class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-md">
         <ul class="divide-y divide-gray-200 dark:divide-gray-700">
           <li *ngFor="let category of filteredCategories" class="hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -71,7 +69,6 @@ import {Category} from "../../../../models/category/category.module";
         </ul>
       </div>
 
-      <!-- Message si aucun résultat -->
       <div *ngIf="filteredCategories.length === 0" class="text-center py-12">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

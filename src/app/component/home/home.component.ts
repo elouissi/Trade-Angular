@@ -1,13 +1,14 @@
 import { Component, type OnInit } from "@angular/core"
 import { CommonModule, NgOptimizedImage } from "@angular/common"
-import { RouterModule } from "@angular/router"
-import { HeaderComponent } from "../header/header.component"
+import {Router, RouterModule} from "@angular/router"
+import { HeaderComponent } from "../layouts/header/header.component"
 import { trigger, transition, style, animate, query, stagger } from "@angular/animations"
 import  { PostService } from "../../service/post/post.service"
 import  { CategoryService } from "../../service/category/category.service"
 import  { UserService } from "../../service/user/user.service"
 import  { Post } from "../../models/post/post.module"
 import  { Category } from "../../models/category/category.module"
+import {AuthService} from "../../service/auth/auth.service";
 
 @Component({
   selector: "app-home",
@@ -24,7 +25,6 @@ import  { Category } from "../../models/category/category.module"
           <div class="absolute inset-0 opacity-20">
             <div class="absolute inset-0 pattern-grid-lg animate-float"></div>
           </div>
-          <!-- Floating objects animation -->
           <div class="floating-objects">
             <div *ngFor="let i of [1,2,3,4,5]"
                  class="floating-object"
@@ -44,13 +44,21 @@ import  { Category } from "../../models/category/category.module"
             Échangez vos objets, réduisez le gaspillage et trouvez des trésors cachés.
           </p>
           <div class="flex flex-col sm:flex-row gap-4 justify-center" [@buttonAnimation]>
-            <a routerLink="/register"
+            <a *ngIf="!this.authService.isAuthenticated() " routerLink="/register"
                class="px-8 py-3 bg-white text-indigo-600 rounded-lg font-medium hover:bg-indigo-50 transition-all hover:scale-105 hover:shadow-lg">
               Commencer
             </a>
-            <a href="#how-it-works"
+            <a href="dashboard/posts" *ngIf="this.authService.isRole('TRADER')"
                class="px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-all hover:scale-105 hover:shadow-lg">
-              Comment ça marche
+              Consulter mes posts
+            </a>
+            <a href="" (click)="updateRole()" *ngIf="this.authService.isRole('VISITOR')"
+               class="px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-all hover:scale-105 hover:shadow-lg">
+              créer un post
+            </a>
+            <a href="dashboard"  *ngIf="this.authService.isRole('ADMIN')"
+               class="px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-all hover:scale-105 hover:shadow-lg">
+              tableaux de board
             </a>
           </div>
         </div>
@@ -482,12 +490,10 @@ import  { Category } from "../../models/category/category.module"
   ],
 })
 export class HomeComponent implements OnInit {
-  // Featured posts
   featuredPosts: Post[] = []
   isLoading = true
   error: string | null = null
 
-  // Categories
   categories: Category[] = []
   isCategoriesLoading = true
   categoriesError: string | null = null
@@ -498,6 +504,8 @@ export class HomeComponent implements OnInit {
     private postService: PostService,
     private categoryService: CategoryService,
     private userService: UserService,
+    protected authService: AuthService,
+    private router:Router
   ) {}
 
   ngOnInit(): void {
@@ -511,8 +519,7 @@ export class HomeComponent implements OnInit {
 
     this.postService.getAllPosts().subscribe({
       next: (posts) => {
-        // Filter active posts and take the first 4
-        this.featuredPosts = posts.filter((post) => post.status === "ACTIVE").slice(0, 4)
+        this.featuredPosts = posts
         this.isLoading = false
       },
       error: (err) => {
@@ -539,6 +546,18 @@ export class HomeComponent implements OnInit {
         this.isCategoriesLoading = false
       },
     })
+  }
+  updateRole(): void {
+    this.userService.toTrader(this.authService.getId()).subscribe({
+      next: (message) => {
+        this.authService.updateRoleLocally('TRADER');
+        this.router.navigate(['dashboard/']);
+        console.log(message)
+        },
+      error: (error) => {
+        console.error('Erreur lors de la mise à jour du rôle', error);
+      }
+    });
   }
 
   getPostImage(post: Post): string {

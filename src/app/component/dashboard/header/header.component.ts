@@ -34,9 +34,7 @@ import {RouterLink} from "@angular/router";
           </div>
 
           <div class="flex items-center gap-4">
-            <button class="bg-blue-700 hover:bg-blue-700-dark text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
-              Trade Now
-            </button>
+
 
             <button
               (click)="onToggleTheme()"

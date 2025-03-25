@@ -3,7 +3,7 @@ import { CommonModule } from "@angular/common"
 import { ReactiveFormsModule,  FormBuilder,  FormGroup, Validators } from "@angular/forms"
 import  { UserService } from "../../../service/user/user.service"
 import {PasswordChange} from "../../../models/user/user.module";
-import {HeaderComponent} from "../../header/header.component";
+import {HeaderComponent} from "../../layouts/header/header.component";
 import {AuthService} from "../../../service/auth/auth.service";
 
 @Component({

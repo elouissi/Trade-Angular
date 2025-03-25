@@ -3,7 +3,7 @@ import { CommonModule } from "@angular/common";
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { RouterModule, Router } from "@angular/router";
 import { trigger, transition, style, animate, keyframes } from "@angular/animations";
-import { HeaderComponent } from "../../component/header/header.component";
+import { HeaderComponent } from "../../component/layouts/header/header.component";
 import Swal from "sweetalert2";
 import {AuthService} from "../../service/auth/auth.service";
 
@@ -256,7 +256,6 @@ export class RegisterComponent {
         }
       });
     } else {
-      // Mark all fields as touched to trigger validation messages
       Object.keys(this.registerForm.controls).forEach((field) => {
         const control = this.registerForm.get(field);
         control?.markAsTouched({ onlySelf: true });

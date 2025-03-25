@@ -5,7 +5,7 @@ import { RegisterComponent } from "./auth/register/register.component"
 import { HomeComponent } from "./component/home/home.component"
 import { PostListComponent } from "./component/dashboard/post/post-list/post-list.component"
 import { PostFormComponent } from "./component/dashboard/post/post-form/post-form.component"
-import { PostDetailComponent } from "./component/dashboard/post/post-detail/post-detail.component"
+
 import { CategoryListComponent } from "./component/dashboard/category/category-list/category-list.component"
 import { CategoryFormComponent } from "./component/dashboard/category/category-form/category-form.component"
 import { ProfileLayoutComponent } from "./component/profile/profile-layout/profile-layout.component"
@@ -22,6 +22,9 @@ import {StatsComponent} from "./component/dashboard/stats/stats.component";
 import {ConversationsListComponent} from "./component/dashboard/conversations-list/conversations-list.component";
 import {UsersListComponent} from "./component/dashboard/users-list/users-list.component";
 import {EmptyComponent} from "./guard/dashboard-redirect-guard.guard";
+import {PostDetailComponent} from "./component/dashboard/post/post-detail/post-detail.component";
+import {PostSingleComponent} from "./component/post-detail/post-detail.component";
+import {logoutGuard} from "./guard/logout.guard";
 
 export const routes: Routes = [
   {
@@ -45,14 +48,14 @@ export const routes: Routes = [
   },
   { path: "details/:id", component: PostDetailComponent },
   { path: "posts", component: PostsComponent },
-  { path: "posts/:id", component: PostDetailComponent },
+  { path: "posts/:id", component: PostSingleComponent },
   { path: "exchanges", component: ExchangesListComponent },
   { path: "exchanges/:id", component: ExchangeComponent },
   { path: "exchanges/conversation/:id", component: ExchangeComponent },
   { path: "exchanges/post/:id", component: ExchangeComponent },
   { path: "exchanges/user/:receiverId", component: ExchangeComponent },
-  { path: "login", component: LoginComponent },
-  { path: "register", component: RegisterComponent },
+  { path: 'login', component: LoginComponent ,canActivate:[logoutGuard] },
+  { path: "register", component: RegisterComponent , canActivate:[logoutGuard] },
   { path: "home", component: HomeComponent },
   { path: "", component: HomeComponent },
 

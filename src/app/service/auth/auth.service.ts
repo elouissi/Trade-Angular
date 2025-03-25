@@ -55,7 +55,11 @@ export class AuthService {
 
 
   logout(): void {
-    localStorage.removeItem('currentUser'); // Remove the token from localStorage
+    localStorage.removeItem('currentUser');
+    const localRole = localStorage.getItem('userRole');
+    if (localRole) {
+       localStorage.removeItem('userRole');
+    }
   }
   getUserFromToken(): JwtPayload | null {
     const token = localStorage.getItem('currentUser'); // Récupérer le token du localStorage
@@ -70,6 +74,9 @@ export class AuthService {
       console.error('Invalid token:', error);
       return null;
     }
+  }
+  updateRoleLocally(newRole: string): void {
+    localStorage.setItem('userRole', newRole);
   }
   geName(): string | null {
     const token = localStorage.getItem('currentUser');
@@ -87,6 +94,10 @@ export class AuthService {
     }
   }
   getRole(): string | null {
+    const localRole = localStorage.getItem('userRole');
+    if (localRole) {
+      return localRole;
+    }
     const token = localStorage.getItem('currentUser');
     if (!token) {
       return null;
@@ -98,7 +109,6 @@ export class AuthService {
       console.error('Invalid token:', error);
       return null;
     }
-
   }
   getEmail(): string | null {
     const token = localStorage.getItem('currentUser');
@@ -132,6 +142,7 @@ export class AuthService {
     return this.getRole() === role;
 
   }
+
 
 
   isAuthenticated(): boolean {

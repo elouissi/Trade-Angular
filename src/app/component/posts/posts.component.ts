@@ -1,7 +1,7 @@
 import { Component, type OnInit } from "@angular/core"
 import { CommonModule, NgOptimizedImage } from "@angular/common"
 import { RouterModule } from "@angular/router"
-import { HeaderComponent } from "../header/header.component"
+import { HeaderComponent } from "../layouts/header/header.component"
 import { FormsModule } from "@angular/forms"
 import { trigger, transition, style, animate, query, stagger } from "@angular/animations"
 import  { PostService } from "../../service/post/post.service"
@@ -230,12 +230,31 @@ import {AuthService} from "../../service/auth/auth.service";
                     </svg>
                     {{post.location}}
                   </div>
-                  <a [routerLink]="['/exchanges', post.id]" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center">
+                  <a *ngIf="this.authService.isRole('ADMIN') || post.userId == this.authService.getId() || !this.authService.isAuthenticated()"
+                     [routerLink]="['/posts', post.id]"
+                     class="text-sm text-indigo-600 hover:text-indigo-800 flex items-center">
+                    Voir détails
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                  </a>
+
+                  <a *ngIf="!this.authService.isRole('ADMIN') && post.userId != this.authService.getId() && post.status == 'ACTIVE' && this.authService.isAuthenticated() "
+                     [routerLink]="['/exchanges', post.id]"
+                     class="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center">
                     Échanger
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
                       <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
                     </svg>
                   </a>
+                  <a *ngIf="post.status == 'INACTIVE' && this.authService.isAuthenticated() && !this.authService.isRole('ADMIN')"
+                     [routerLink]="['/posts', post.id]"
+                     class="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center">
+                    post inactive
+                  </a>
+
+
+
 
                 </div>
               </div>
@@ -291,14 +310,21 @@ import {AuthService} from "../../service/auth/auth.service";
             Rejoignez notre communauté et commencez à échanger dès aujourd'hui !
           </p>
           <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a routerLink="/register"
+            <a *ngIf="!this.authService.isAuthenticated()" routerLink="/register"
                class="px-8 py-3 bg-white text-indigo-600 rounded-lg font-medium hover:bg-indigo-50 transition-all hover:scale-105 hover:shadow-lg">
               S'inscrire
             </a>
-            <a routerLink="/dashboard/posts/new"
-               (click)="updateToTrader()"
+            <a *ngIf="this.authService.isRole('TRADER')" href="dashboard/posts"
+               class="px-8 py-3 bg-indigo-600 border border-white text-white rounded-lg font-medium hover:bg-indigo-700 transition-all hover:scale-105 hover:shadow-lg">
+              Consulter mes posts
+            </a>
+            <a *ngIf="this.authService.isRole('VISITOR')" href="dashboard/posts/new" (click)="updateToTrader()"
                class="px-8 py-3 bg-indigo-600 border border-white text-white rounded-lg font-medium hover:bg-indigo-700 transition-all hover:scale-105 hover:shadow-lg">
               Ajouter un objet
+            </a>
+            <a *ngIf="this.authService.isRole('ADMIN')" href="dashboard"
+               class="px-8 py-3 bg-indigo-600 border border-white text-white rounded-lg font-medium hover:bg-indigo-700 transition-all hover:scale-105 hover:shadow-lg">
+              Tableau de bord
             </a>
           </div>
         </div>
@@ -418,13 +444,12 @@ export class PostsComponent implements OnInit {
   // État
   isLoading = true
 
-  // Stocke l'index de la photo sélectionnée pour chaque post
   selectedPhotoIndices: Map<string, number> = new Map()
 
   constructor(
     private postService: PostService,
     private categoryService: CategoryService,
-    private authService: AuthService,
+    protected authService: AuthService,
   ) {}
 
   ngOnInit(): void {

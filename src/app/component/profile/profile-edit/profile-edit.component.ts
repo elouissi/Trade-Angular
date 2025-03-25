@@ -4,7 +4,7 @@ import { ReactiveFormsModule,  FormBuilder,  FormGroup, Validators } from "@angu
 import {  Router, RouterModule } from "@angular/router"
 import  { UserService } from "../../../service/user/user.service"
 import {User} from "../../../models/user/user.module";
-import {HeaderComponent} from "../../header/header.component";
+import {HeaderComponent} from "../../layouts/header/header.component";
 
 @Component({
   selector: "app-profile-edit",

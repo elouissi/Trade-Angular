@@ -17,7 +17,7 @@ import {AuthService} from "../../../../service/auth/auth.service";
       <!-- Header avec actions -->
       <div class="mb-6 flex justify-between items-center">
         <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Annonces</h2>
-        <a routerLink="/dashboard/posts/new"
+        <a *ngIf="this.authService.isRole('TRADER')" routerLink="/dashboard/posts/new"
            class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors">
           Nouvelle annonce
         </a>
@@ -126,7 +126,6 @@ import {AuthService} from "../../../../service/auth/auth.service";
                 </button>
               </div>
 
-              <!-- Overlay avec bouton de détail -->
               <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                 <a [routerLink]="['/dashboard/posts', post.id]"
                    class="px-4 py-2 bg-indigo-600 text-white rounded-md transform translate-y-4 hover:translate-y-0 transition-transform duration-300 hover:bg-indigo-700">
@@ -135,7 +134,6 @@ import {AuthService} from "../../../../service/auth/auth.service";
               </div>
             </div>
 
-            <!-- Indicateurs de photos -->
             <div *ngIf="post.photos && post.photos.length > 1" class="absolute bottom-2 left-0 right-0 flex justify-center space-x-1">
               <div *ngFor="let photo of post.photos; let i = index"
                    class="w-2 h-2 rounded-full transition-all"
@@ -159,7 +157,6 @@ import {AuthService} from "../../../../service/auth/auth.service";
             </div>
           </div>
 
-          <!-- Contenu -->
           <div class="p-4">
             <div class="flex items-center justify-between mb-2">
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white line-clamp-1">{{post.title}}</h3>
@@ -167,7 +164,6 @@ import {AuthService} from "../../../../service/auth/auth.service";
             </div>
             <p class="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">{{post.description}}</p>
 
-            <!-- Footer -->
             <div class="flex items-center justify-between">
               <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -177,7 +173,6 @@ import {AuthService} from "../../../../service/auth/auth.service";
                 {{post.location}}
               </div>
 
-              <!-- Actions -->
               <div class="flex space-x-2">
                 <button (click)="editPost(post)"
                         class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors">
@@ -197,7 +192,6 @@ import {AuthService} from "../../../../service/auth/auth.service";
         </div>
       </div>
 
-      <!-- Message si aucun résultat -->
       <div *ngIf="filteredPosts.length === 0" class="text-center py-12">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -276,7 +270,7 @@ export class PostListComponent implements OnInit {
   constructor(
     private postService: PostService,
     private categoryService: CategoryService,
-    private authService: AuthService,
+    protected authService: AuthService,
   ) {}
 
   ngOnInit() {
