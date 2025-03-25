@@ -52,10 +52,10 @@ import {AuthService} from "../../service/auth/auth.service";
                class="px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-all hover:scale-105 hover:shadow-lg">
               Consulter mes posts
             </a>
-            <a href="" (click)="updateRole()" *ngIf="this.authService.isRole('VISITOR')"
-               class="px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-all hover:scale-105 hover:shadow-lg">
+            <button (click)="updateRole()" *ngIf="authService.isRole('VISITOR')"
+                    class="px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-all hover:scale-105 hover:shadow-lg">
               créer un post
-            </a>
+            </button>
             <a href="dashboard"  *ngIf="this.authService.isRole('ADMIN')"
                class="px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-all hover:scale-105 hover:shadow-lg">
               tableaux de board
@@ -549,17 +549,16 @@ export class HomeComponent implements OnInit {
   }
   updateRole(): void {
     this.userService.toTrader(this.authService.getId()).subscribe({
-      next: (message) => {
+      next: (response) => {
         this.authService.updateRoleLocally('TRADER');
         this.router.navigate(['dashboard/']);
-        console.log(message)
-        },
+        console.log(response.message);
+      },
       error: (error) => {
         console.error('Erreur lors de la mise à jour du rôle', error);
       }
     });
   }
-
   getPostImage(post: Post): string {
     if (!post.photos || post.photos.length === 0) {
       return "../../../assets/images/placeholder.jpg"

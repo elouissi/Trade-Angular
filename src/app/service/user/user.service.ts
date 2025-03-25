@@ -41,13 +41,12 @@ export class UserService {
       })
     );
   }
-
-  toTrader(id: string | null): Observable<string> {
+  toTrader(id: string | null): Observable<{message: string}> {
     if (!id) {
       return throwError(() => new Error('Invalid ID: ID cannot be null'));
     }
 
-    return this.http.put<string>(`${this.apiUrl}/toTrader/${id}`, {}).pipe(
+    return this.http.put<{message: string}>(`${this.apiUrl}/toTrader/${id}`, {}).pipe(
       catchError(error => {
         console.error('Error updating trader profile', error);
         return throwError(() => error);
