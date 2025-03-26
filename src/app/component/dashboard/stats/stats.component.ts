@@ -125,8 +125,8 @@ export class StatsComponent implements OnInit {
   }
 
   fetchStats(): void {
-    this.userService.getUserProfile().subscribe((user) => {
-      this.userCount = user ? 1 : 0
+    this.userService.getAllUsers().subscribe((users) => {
+      this.userCount = users.length
     })
 
     this.postService.getAllPosts().subscribe((posts) => {

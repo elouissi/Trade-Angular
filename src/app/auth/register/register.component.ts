@@ -72,13 +72,14 @@ import {AuthService} from "../../service/auth/auth.service";
                   <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
                 </svg>
               </div>
-              <input
+              <select
                 formControlName="location"
-                type="text"
                 id="location"
-                class="bg-gray-800 text-white focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 py-2 border border-gray-700 rounded-md"
-                placeholder="Ville, Pays"
+                class="bg-gray-800 text-white focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 py-2 border border-gray-700 rounded-md appearance-none"
               >
+                <option value="" disabled selected>Choisissez une ville</option>
+                <option *ngFor="let ville of villes" [value]="ville">{{ ville }}</option>
+              </select>
             </div>
             <div *ngIf="registerForm.get('location')?.invalid && registerForm.get('location')?.touched" class="text-red-500 text-sm mt-1">
               Localisation requise
@@ -192,6 +193,8 @@ import {AuthService} from "../../service/auth/auth.service";
 export class RegisterComponent {
   registerForm: FormGroup;
   isLoading: boolean = false;
+  villes: string[] = ["Casablanca", "Rabat", "Marrakech", "Tanger", "Fès"];
+
 
   constructor(
     private fb: FormBuilder,

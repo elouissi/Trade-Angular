@@ -79,18 +79,23 @@ import  { Category } from "../../../../models/category/category.module"
 
           <!-- Localisation -->
           <div>
-            <label for="location" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Localisation</label>
-            <input
-              type="text"
+            <label for="location" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Localisation
+            </label>
+            <select
               id="location"
               formControlName="location"
               class="mt-1 block w-full px-4 py-2 text-gray-900 dark:text-white bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
+            >
+              <option value="" disabled selected>Choisissez une ville</option>
+              <option *ngFor="let ville of villes" [value]="ville">{{ ville }}</option>
+            </select>
             <div *ngIf="postForm.get('location')?.invalid && postForm.get('location')?.touched"
                  class="text-red-500 dark:text-red-400 text-sm mt-1">
               La localisation est obligatoire
             </div>
           </div>
+
 
           <!-- Statut -->
           <div>
@@ -218,6 +223,7 @@ export class PostFormComponent implements OnInit {
   postForm: FormGroup
   isEditing = false
   categories: Category[] = []
+  villes: string[] = ["Casablanca", "Rabat", "Marrakech", "Tanger", "Fès"];
   statusOptions = Object.values(PostSelect)
 
   constructor(

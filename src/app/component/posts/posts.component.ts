@@ -195,8 +195,14 @@ import {AuthService} from "../../service/auth/auth.service";
                 </div>
 
                 <!-- Overlay avec bouton de détail -->
-                <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                <div *ngIf="this.authService.isRole('TRADER') && this.authService.getId() == post.userId" class="absolute inset-0 bg-black bg-opacity-30 opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                   <a [routerLink]="['/details', post.id]"
+                     class="px-4 py-2 bg-indigo-600 text-white rounded-md transform translate-y-4 hover:translate-y-0 transition-transform duration-300 hover:bg-indigo-700">
+                    Voir détails
+                  </a>
+                </div>
+                <div *ngIf="!this.authService.isRole('TRADER') " class="absolute inset-0 bg-black bg-opacity-30 opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                  <a [routerLink]="['/posts', post.id]"
                      class="px-4 py-2 bg-indigo-600 text-white rounded-md transform translate-y-4 hover:translate-y-0 transition-transform duration-300 hover:bg-indigo-700">
                     Voir détails
                   </a>
@@ -426,7 +432,6 @@ export class PostsComponent implements OnInit {
   filteredPosts: Post[] = []
   categories: Category[] = []
 
-  // Filtres
   searchTerm = ""
   selectedCategory = ""
   selectedStatus = ""
@@ -478,7 +483,6 @@ export class PostsComponent implements OnInit {
         this.posts = posts
         this.filterPosts()
 
-        // Initialiser les indices de photos sélectionnées
         this.posts.forEach((post) => {
           if (post.id) {
             this.selectedPhotoIndices.set(post.id, 0)
@@ -495,7 +499,6 @@ export class PostsComponent implements OnInit {
   }
 
   filterPosts(): void {
-    // Filtrer les posts selon les critères
     const filtered = this.posts.filter((post) => {
       const matchesSearch =
         !this.searchTerm ||
@@ -511,15 +514,12 @@ export class PostsComponent implements OnInit {
       return matchesSearch && matchesCategory && matchesStatus && matchesLocation
     })
 
-    // Calculer le nombre total de pages
     this.totalPages = Math.ceil(filtered.length / this.postsPerPage)
 
-    // Ajuster la page courante si nécessaire
-    if (this.currentPage > this.totalPages) {
+   if (this.currentPage > this.totalPages) {
       this.currentPage = Math.max(1, this.totalPages)
     }
 
-    // Paginer les résultats
     const startIndex = (this.currentPage - 1) * this.postsPerPage
     const endIndex = startIndex + this.postsPerPage
 
@@ -533,7 +533,6 @@ export class PostsComponent implements OnInit {
 
       // Scroll to top of the posts section
       window.scrollTo({
-        // top: document.querySelector(".py-16.bg-gray-50")?.getBoundingClientRect().top + window.scrollY - 100,
         behavior: "smooth",
       })
     }
@@ -551,7 +550,6 @@ export class PostsComponent implements OnInit {
     } else {
       // Show a subset of pages
       if (this.currentPage <= 3) {
-        // Near the start
         for (let i = 1; i <= 5; i++) {
           pages.push(i)
         }
@@ -584,12 +582,7 @@ export class PostsComponent implements OnInit {
     }
   }
 
-  getPhotoUrl(photo: any): string {
-    if (!photo || !photo.filePath) {
-      return "/assets/placeholder.jpg"
-    }
-    return "http://localhost:8445/" + photo.filePath
-  }
+
 
   getMainPhotoUrl(post: Post): string {
     if (!post.photos || post.photos.length === 0) {

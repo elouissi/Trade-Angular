@@ -260,7 +260,6 @@ export class PostListComponent implements OnInit {
   selectedStatus = ""
   selectedLocation = ""
 
-  // Stocke l'index de la photo sélectionnée pour chaque post
   selectedPhotoIndices: Map<string, number> = new Map()
 
   categories: Category[] = []

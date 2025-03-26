@@ -48,9 +48,7 @@ import { ConversationDTO } from "../../../models/conversation/conversation.modul
                   </svg>
                 </div>
 
-                <!-- Infos principales -->
                 <div class="ml-4">
-                  <!-- Titre du post -->
                   <div class="text-sm font-medium text-gray-900 dark:text-white mb-1">
                     {{ conversation.postTitle || 'Sans titre' }}
                   </div>
@@ -143,22 +141,5 @@ export class ConversationsListComponent implements OnInit {
     this.filterConversations()
   }
 
-  formatDate(dateString?: string | null): string {
-    if (!dateString) return ""
-
-    const date = new Date(dateString)
-    const now = new Date()
-    const diff = now.getTime() - date.getTime()
-    const day = 24 * 60 * 60 * 1000
-
-    if (diff < day) {
-      return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    } else if (diff < 7 * day) {
-      const days = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"]
-      return days[date.getDay()]
-    } else {
-      return date.toLocaleDateString()
-    }
-  }
 
 }
